@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
               radius: 55,
               backgroundImage:
                   AssetImage(
-                'assets/images/user.png',
+                'assets/images/login.png',
               ),
             ),
 
