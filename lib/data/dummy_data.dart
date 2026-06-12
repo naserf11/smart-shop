@@ -6,7 +6,7 @@ class DummyData {
     Category(
       id: '1',
       name: 'Fruits & Vegetables',
-      image: 'assets/images/av.png',
+      image: 'assets/images/basket.png',
     ),
     Category(
       id: '2',
