@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'core/app_routes.dart';
 import 'core/app_theme.dart';
 
-void main() {
-  runApp(const GroceryPlusApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://dkfopmhhvxeshmzumucb.supabase.co',
+    publishableKey:
+        'sb_publishable_VZkRlh7TW6WLJ2NnYCOxfw_-g5LaML3',
+  );
+
+  runApp(
+    const GroceryPlusApp(),
+  );
 }
 
 class GroceryPlusApp extends StatelessWidget {
