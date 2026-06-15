@@ -1,9 +1,17 @@
-// Osama 
+// Osama
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app_routes.dart';
 import 'core/app_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'YOUR_SUPABASE_URL',
+    publishableKey: 'YOUR_SUPABASE_ANON_KEY',
+  );
+
   runApp(const GroceryPlusApp());
 }
 
