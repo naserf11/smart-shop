@@ -3,6 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera is required to scan product barcodes and QR codes at checkout.</string>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>

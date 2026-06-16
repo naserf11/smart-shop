@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 
+class PaymentScreen
+    extends StatefulWidget {
 
-class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+  const PaymentScreen({
+    super.key,
+  });
 
   @override
   State<PaymentScreen> createState() =>
@@ -23,202 +26,139 @@ class _PaymentScreenState
       backgroundColor: Colors.white,
 
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-
-        title: const Text(
-          "Payment Method",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight:
-                FontWeight.bold,
-            fontSize: 28,
-          ),
-        ),
-
-        centerTitle: false,
+        title:
+            const Text("Payment"),
       ),
 
-      body: Column(
-        children: [
+      body: Padding(
+        padding:
+            const EdgeInsets.all(20),
 
-          const SizedBox(height: 20),
+        child: Column(
+          children: [
 
-          paymentTile(
-            title:
-                "Credit / Debit Card",
-            icon:
-                Icons.credit_card,
-          ),
+            RadioListTile(
+              value:
+                  "Credit Card",
 
-          paymentTile(
-            title:
-                "Online Payment via FPX",
-            icon:
-                Icons.account_balance,
-          ),
+              groupValue:
+                  selectedMethod,
 
-          paymentTile(
-            title:
-                "Touch 'n Go",
-            icon:
-                Icons.account_balance_wallet,
-          ),
+              onChanged: (value) {
+
+                setState(() {
+                  selectedMethod =
+                      value!;
+                });
+              },
+
+              title: const Text(
+                "Credit Card",
+              ),
+            ),
+
+            RadioListTile(
+              value: "FPX",
+
+              groupValue:
+                  selectedMethod,
+
+              onChanged: (value) {
+
+                setState(() {
+                  selectedMethod =
+                      value!;
+                });
+              },
+
+              title:
+                  const Text("FPX"),
+            ),
+
+            RadioListTile(
+              value:
+                  "Cash On Delivery",
+
+              groupValue:
+                  selectedMethod,
+
+              onChanged: (value) {
+
+                setState(() {
+                  selectedMethod =
+                      value!;
+                });
+              },
+
+              title: const Text(
+                "Cash On Delivery",
+              ),
+            ),
 
           const Spacer(),
 
-          Padding(
-            padding:
-                const EdgeInsets.all(
-              20,
-            ),
-
-            child: SizedBox(
+            SizedBox(
               width:
                   double.infinity,
 
-              height: 55,
-
-              child: ElevatedButton(
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor:
-    AppColors.primary,
-                  shape:
-                      RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(
-                      12,
-                    ),
-                  ),
-                ),
-
+              child:
+                  ElevatedButton(
                 onPressed: () {
 
-                  if (selectedMethod ==
-                      "Credit / Debit Card") {
+                  showDialog(
+                    context:
+                        context,
 
-                    // Stripe page
-                    Navigator.pushNamed(
-                      context,
-                      '/cardPayment',
-                    );
+                    builder:
+                        (_) =>
+                            AlertDialog(
+                      title:
+                          const Text(
+                        "Success",
+                      ),
 
-                  } else if (selectedMethod ==
-                      "Online Payment via FPX") {
+                      content:
+                          const Text(
+                        "Order Placed Successfully",
+                      ),
 
-                    // FPX page
-                    Navigator.pushNamed(
-                      context,
-                      '/fpxPayment',
-                    );
+                      actions: [
 
-                  } else {
+                        TextButton(
+                          onPressed: () {
 
-                    // Touch n Go page
-                    Navigator.pushNamed(
-                      context,
-                      '/tngPayment',
-                    );
-                  }
+                            Navigator.pop(
+                                context);
+
+                            Navigator.pop(
+                                context);
+
+                            Navigator.pop(
+                                context);
+                          },
+
+                          child:
+                              const Text(
+                            "OK",
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
 
-                child: const Text(
+                child:
+                    const Text(
                   "Pay Now",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget paymentTile({
-    required String title,
-    required IconData icon,
-  }) {
-
-    bool selected =
-        selectedMethod == title;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedMethod = title;
-        });
-      },
-
-      child: Container(
-        width:
-            double.infinity,
-
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 24,
-        ),
-
-        decoration: BoxDecoration(
-          color: selected
-              ? Colors.green
-                  .withOpacity(0.08)
-              : Colors.white,
-
-          border: const Border(
-            bottom: BorderSide(
-              color:
-                  Color(0xFFE5E5E5),
-            ),
-          ),
-        ),
-
-        child: Row(
-          children: [
-
-            Icon(
-              icon,
-              size: 28,
-              color: selected
-                  ? const Color.fromARGB(255, 23, 207, 78)
-                  : Colors.black54,
-            ),
-
-            const SizedBox(width: 20),
-
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight:
-                      FontWeight.w500,
-                  color: selected
-                      ? Colors.green
-                      : Colors.black87,
                 ),
               ),
             ),
 
-            if (selected)
-              const Icon(
-                Icons.check_circle,
-                color: Colors.green,
-              ),
+            // if (selected)
+            //   const Icon(
+            //     Icons.check_circle,
+            //     color: Colors.green,
+            //   ),
           ],
         ),
       ),

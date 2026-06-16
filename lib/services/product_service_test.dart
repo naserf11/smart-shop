@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'supabase_service.dart';
 
 class ProductServiceTest {
@@ -7,6 +8,6 @@ class ProductServiceTest {
             .from('products')
             .select();
 
-    print(response);
+debugPrint(response.toString());
   }
 }
