@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/cart_service.dart';
-import 'checkout_screen.dart';
+import 'payment_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -21,7 +21,9 @@ class _CartScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Cart"),
+        title: const Text(
+          "My Cart",
+        ),
       ),
 
       body: Column(
@@ -43,6 +45,7 @@ class _CartScreenState
                     width: 60,
                     child: Image.asset(
                       item.product.image,
+                      fit: BoxFit.cover,
                     ),
                   ),
 
@@ -68,6 +71,7 @@ class _CartScreenState
                             );
                           });
                         },
+
                         icon: const Icon(
                           Icons.remove,
                         ),
@@ -87,6 +91,7 @@ class _CartScreenState
                             );
                           });
                         },
+
                         icon: const Icon(
                           Icons.add,
                         ),
@@ -100,7 +105,9 @@ class _CartScreenState
 
           Container(
             padding:
-                const EdgeInsets.all(20),
+                const EdgeInsets.all(
+              20,
+            ),
 
             child: Column(
               children: [
@@ -132,7 +139,8 @@ class _CartScreenState
                 ),
 
                 const SizedBox(
-                    height: 20),
+                  height: 20,
+                ),
 
                 SizedBox(
                   width:
@@ -146,14 +154,14 @@ class _CartScreenState
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              const CheckoutScreen(),
+                              const PaymentScreen(),
                         ),
                       );
                     },
 
                     child:
                         const Text(
-                      "Checkout",
+                      "Proceed To Payment",
                     ),
                   ),
                 ),
