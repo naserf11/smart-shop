@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+
+int currentIndex = 3;
 class NotificationsScreen
     extends StatelessWidget {
 

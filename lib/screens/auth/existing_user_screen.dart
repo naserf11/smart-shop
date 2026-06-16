@@ -26,7 +26,7 @@ class ExistingUserScreen
               const Spacer(),
 
               Image.asset(
-                'assets/images/user.png',
+                'assets/images/login.png',
                 height: 220,
               ),
 

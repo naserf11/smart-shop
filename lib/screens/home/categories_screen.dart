@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../data/dummy_data.dart';
 import '../../widgets/category_card.dart';
 
+
+int currentIndex = 1;
 class CategoriesScreen
     extends StatelessWidget {
 

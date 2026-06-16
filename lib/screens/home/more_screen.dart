@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../core/app_routes.dart';
 
+
+
+
+
+
+
+
+
+
+int currentIndex = 4;
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
+
 
   @override
   Widget build(BuildContext context) {

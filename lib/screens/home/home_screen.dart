@@ -7,7 +7,7 @@ import '../../widgets/bottom_nav_bar.dart';
 
 import '../../data/dummy_data.dart';
 import '../../services/product_service_test.dart';
-
+int currentIndex = 0;
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -35,44 +35,51 @@ class _HomeScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: currentIndex,
-        onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
+     bottomNavigationBar: BottomNavBar(
+  currentIndex: currentIndex,
+  onTap: (index) {
+    setState(() {
+      currentIndex = index;
+    });
 
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(
-                context,
-                AppRoutes.home,
-              );
-              break;
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.home,
+        );
+        break;
 
-            case 1:
-              Navigator.pushNamed(
-                context,
-                AppRoutes.scan,
-              );
-              break;
+      case 1:
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.cart,
+        );
+        break;
 
-            case 2:
-              Navigator.pushNamed(
-                context,
-                AppRoutes.cart,
-              );
-              break;
+      case 2:
+       Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.scan,
+        );
+        break;
 
-            case 3:
-              Navigator.pushNamed(
-                context,
-                AppRoutes.more,
-              );
-              break;
-          }
-        },
-      ),
+      case 3:
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.notifications,
+        );
+        break;
+
+      case 4:
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.more,
+        );
+        break;
+    }
+  },
+),
 
       body: SafeArea(
         child: Padding(

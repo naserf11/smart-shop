@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
               radius: 55,
               backgroundImage:
                   AssetImage(
-                'assets/images/user.png',
+                'assets/images/login.png',
               ),
             ),
 
@@ -69,49 +69,8 @@ class ProfileScreen extends StatelessWidget {
               },
             ),
 
-            ListTile(
-              leading: const Icon(
-                  Icons.shopping_bag),
-              title:
-                  const Text(
-                "My Orders",
-              ),
-              trailing:
-                  const Icon(
-                Icons.chevron_right,
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const OrdersScreen(),
-                  ),
-                );
-              },
-            ),
-
-            ListTile(
-              leading: const Icon(
-                  Icons.settings),
-              title:
-                  const Text(
-                "Settings",
-              ),
-              trailing:
-                  const Icon(
-                Icons.chevron_right,
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const SettingsScreen(),
-                  ),
-                );
-              },
-            ),
+          
+            
 
             ListTile(
               leading: const Icon(
