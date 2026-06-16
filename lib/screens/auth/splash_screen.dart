@@ -18,14 +18,16 @@ class _SplashScreenState
     super.initState();
 
     Future.delayed(
-      const Duration(seconds: 3),
-      () {
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.login,
-        );
-      },
+  const Duration(seconds: 3),
+  () {
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(
+      context,
+      AppRoutes.login,
     );
+  },
+);
   }
 
   @override

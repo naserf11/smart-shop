@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 
-class PaymentScreen
-    extends StatefulWidget {
-
+class PaymentScreen extends StatefulWidget {
   const PaymentScreen({
     super.key,
   });
 
   @override
-  State<PaymentScreen>
-      createState() =>
-          _PaymentScreenState();
+  State<PaymentScreen> createState() =>
+      _PaymentScreenState();
 }
 
 class _PaymentScreenState
@@ -24,99 +21,63 @@ class _PaymentScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            const Text("Payment"),
+        title: const Text("Payment"),
       ),
 
       body: Padding(
-        padding:
-            const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
 
         child: Column(
           children: [
 
-            RadioListTile(
-              value:
-                  "Credit Card",
-
-              groupValue:
-                  selectedMethod,
+            RadioGroup<String>(
+              groupValue: selectedMethod,
 
               onChanged: (value) {
-
                 setState(() {
-                  selectedMethod =
-                      value!;
+                  selectedMethod = value!;
                 });
               },
 
-              title: const Text(
-                "Credit Card",
-              ),
-            ),
+              child: Column(
+                children: [
 
-            RadioListTile(
-              value: "FPX",
+                  const RadioListTile<String>(
+                    value: "Credit Card",
+                    title: Text("Credit Card"),
+                  ),
 
-              groupValue:
-                  selectedMethod,
+                  const RadioListTile<String>(
+                    value: "FPX",
+                    title: Text("FPX"),
+                  ),
 
-              onChanged: (value) {
-
-                setState(() {
-                  selectedMethod =
-                      value!;
-                });
-              },
-
-              title:
-                  const Text("FPX"),
-            ),
-
-            RadioListTile(
-              value:
-                  "Cash On Delivery",
-
-              groupValue:
-                  selectedMethod,
-
-              onChanged: (value) {
-
-                setState(() {
-                  selectedMethod =
-                      value!;
-                });
-              },
-
-              title: const Text(
-                "Cash On Delivery",
+                  const RadioListTile<String>(
+                    value: "Cash On Delivery",
+                    title: Text("Cash On Delivery"),
+                  ),
+                ],
               ),
             ),
 
             const Spacer(),
 
             SizedBox(
-              width:
-                  double.infinity,
+              width: double.infinity,
 
-              child:
-                  ElevatedButton(
+              child: ElevatedButton(
                 onPressed: () {
 
                   showDialog(
-                    context:
-                        context,
+                    context: context,
 
-                    builder:
-                        (_) =>
-                            AlertDialog(
-                      title:
-                          const Text(
+                    builder: (_) =>
+                        AlertDialog(
+                      title: const Text(
                         "Success",
                       ),
 
-                      content:
-                          const Text(
+                      content: const Text(
                         "Order Placed Successfully",
                       ),
 
@@ -125,18 +86,12 @@ class _PaymentScreenState
                         TextButton(
                           onPressed: () {
 
-                            Navigator.pop(
-                                context);
-
-                            Navigator.pop(
-                                context);
-
-                            Navigator.pop(
-                                context);
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                            Navigator.pop(context);
                           },
 
-                          child:
-                              const Text(
+                          child: const Text(
                             "OK",
                           ),
                         ),
@@ -145,8 +100,7 @@ class _PaymentScreenState
                   );
                 },
 
-                child:
-                    const Text(
+                child: const Text(
                   "Pay Now",
                 ),
               ),

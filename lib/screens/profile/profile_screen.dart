@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'edit_profile_screen.dart';
-import 'settings_screen.dart';
-import '../orders/orders_screen.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
