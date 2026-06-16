@@ -28,10 +28,7 @@ class SettingsScreen extends StatelessWidget {
           const ListTile(
             leading: Icon(Icons.lock),
             title: Text('Privacy'),
-          ),
-          const ListTile(
-            leading: Icon(Icons.language),
-            title: Text('Language'),
+          
           ),
           const ListTile(
             leading: Icon(Icons.info),

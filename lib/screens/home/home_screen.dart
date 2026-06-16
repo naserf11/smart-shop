@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../../core/app_routes.dart';
 import '../../widgets/search_bar_widget.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/bottom_nav_bar.dart';
-import '../../core/app_routes.dart';
-import '../../data/dummy_data.dart';
 
+import '../../data/dummy_data.dart';
+import '../../services/product_service_test.dart';
+int currentIndex = 0;
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,10 +25,17 @@ class _HomeScreenState
   int currentIndex = 0;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
 
+    ProductServiceTest()
+        .testConnection();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: BottomNavBar(
+     bottomNavigationBar: BottomNavBar(
   currentIndex: currentIndex,
   onTap: (index) {
     setState(() {
@@ -34,41 +43,47 @@ class _HomeScreenState
     });
 
     switch (index) {
-  case 0:
-    Navigator.pushNamed(
-      context,
-      AppRoutes.home,
-    );
-    break;
+      case 0:
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.home,
+        );
+        break;
 
-  case 1:
-    Navigator.pushNamed(
-      context,
-      AppRoutes.scan,
-    );
-    break;
+      case 1:
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.cart,
+        );
+        break;
 
-  case 2:
-    Navigator.pushNamed(
-      context,
-      AppRoutes.cart,
-    );
-    break;
+      case 2:
+       Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.scan,
+        );
+        break;
 
-  case 3:
-    Navigator.pushNamed(
-      context,
-      AppRoutes.more,
-    );
-    break;
-}
+      case 3:
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.notifications,
+        );
+        break;
+
+      case 4:
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.more,
+        );
+        break;
+    }
   },
 ),
 
       body: SafeArea(
         child: Padding(
-          padding:
-              const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
 
           child: Column(
             crossAxisAlignment:
@@ -112,35 +127,35 @@ class _HomeScreenState
                 child: ListView.builder(
                   scrollDirection:
                       Axis.horizontal,
+
                   itemCount:
-                      DummyData.categories
-                          .length,
+                      DummyData.categories.length,
 
                   itemBuilder:
                       (context, index) {
 
                     final category =
-                        DummyData
-                            .categories[
-                                index];
+                        DummyData.categories[index];
 
                     return Padding(
                       padding:
-                          const EdgeInsets
-                              .only(
-                              right: 12),
+                          const EdgeInsets.only(
+                        right: 12,
+                      ),
 
                       child: CategoryCard(
                         image:
                             category.image,
+
                         title:
                             category.name,
+
                         onTap: () {
-  Navigator.pushNamed(
-    context,
-    AppRoutes.categories,
-  );
-},
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.categories,
+                          );
+                        },
                       ),
                     );
                   },

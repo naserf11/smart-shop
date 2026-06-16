@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../widgets/primary_button.dart';
 
+
+int currentIndex = 2;
 class ScanScreen extends StatelessWidget {
   const ScanScreen({super.key});
 
