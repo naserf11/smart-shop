@@ -8,8 +8,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    url: 'YOUR_SUPABASE_URL',
-    publishableKey: 'YOUR_SUPABASE_ANON_KEY',
+    url: 'https://dkfopmhhvxeshmzumucb.supabase.co',
+    publishableKey: 'sb_publishable_VZkRlh7TW6WLJ2NnYCOxfw_-g5LaML3',
   );
 
   runApp(const GroceryPlusApp());
