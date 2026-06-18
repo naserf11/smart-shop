@@ -17,64 +17,63 @@ class BottomNavBar extends StatelessWidget {
       height: 85,
       decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-          ),
-        ],
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
       child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceAround,
         children: [
-
-          _buildItem(
-            icon: Icons.home,
-            label: "Home",
-            index: 0,
+          Expanded(
+            child: _buildItem(icon: Icons.home, label: "Home", index: 0),
           ),
 
-          _buildItem(
-            icon: Icons.shopping_cart,
-            label: "Cart",
-            index: 1,
+          Expanded(
+            child: _buildItem(
+              icon: Icons.shopping_cart,
+              label: "Cart",
+              index: 1,
+            ),
           ),
 
-          GestureDetector(
-            onTap: () => onTap(2),
-            child: Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary
-                        .withValues(alpha: 0.3),
-                    blurRadius: 12,
+          Expanded(
+            child: Center(
+              child: Transform.translate(
+                offset: const Offset(0, -15),
+                child: GestureDetector(
+                  onTap: () => onTap(2),
+                  child: Container(
+                    width: 78,
+                    height: 78,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 34,
+                    ),
                   ),
-                ],
-              ),
-              child: const Icon(
-                Icons.camera_alt,
-                color: Colors.white,
-                size: 34,
+                ),
               ),
             ),
           ),
 
-          _buildItem(
-            icon: Icons.notifications,
-            label: "Notifications",
-            index: 3,
+          Expanded(
+            child: _buildItem(
+              icon: Icons.notifications,
+              label: "Notifications",
+              index: 3,
+            ),
           ),
 
-          _buildItem(
-            icon: Icons.menu,
-            label: "More",
-            index: 4,
+          Expanded(
+            child: _buildItem(icon: Icons.menu, label: "More", index: 4),
           ),
         ],
       ),
@@ -86,38 +85,30 @@ class BottomNavBar extends StatelessWidget {
     required String label,
     required int index,
   }) {
-    final bool isSelected =
-        currentIndex == index;
+    final bool isSelected = currentIndex == index;
 
     return GestureDetector(
       onTap: () => onTap(index),
-      child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 28,
-            color: isSelected
-                ? AppColors.primary
-                : Colors.grey,
-          ),
-
-          const SizedBox(height: 4),
-
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isSelected
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-              color: isSelected
-                  ? AppColors.primary
-                  : Colors.grey,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 28,
+              color: isSelected ? AppColors.primary : Colors.grey,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? AppColors.primary : Colors.grey,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
