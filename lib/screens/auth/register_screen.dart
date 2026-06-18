@@ -56,13 +56,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.person,
                   controller: nameController,
                   validator: (value) {
-                    // Added a .trim().isEmpty check to ensure users don't just type empty spaces
-                    // if (value == null || value.trim().isEmpty) {
-                    //   return 'Please enter your full name';
-                    // }
-                    // if (value.length < 3) {
-                    //   return 'Full Name must be at least 3 characters';
-                    // }
+                    // Enforce the requirement: no empty names and at least 3 characters
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter your full name';
+                    }
+                    if (value.trim().length < 3) {
+                      return 'Full Name must be at least 3 characters';
+                    }
                     return null;
                   },
                 ),
@@ -76,7 +76,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // 3. Trigger the validation check before navigating!
                     if (_formKey.currentState!.validate()) {
                       // If it's valid, proceed to the password screen
-                      Navigator.pushNamed(context, AppRoutes.createPassword);
+                      // Pass the validated name as an argument to save into Supabase later
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.createPassword,
+                        arguments: nameController.text.trim(),
+                      );
                     }
                   },
                 ),

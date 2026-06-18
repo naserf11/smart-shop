@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/primary_button.dart';
@@ -30,32 +31,45 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
     // 1. Validate the form (checks for empty fields and matching passwords)
     if (!_formKey.currentState!.validate()) return;
 
+    // Retrieve the user's name passed from the RegisterScreen
+    final String fullName =
+        ModalRoute.of(context)?.settings.arguments as String? ?? 'Unknown User';
+
     FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Add your Supabase logic here to update the user's password securely
-      // Example: await Supabase.instance.client.auth.updateUser(UserAttributes(password: _passController.text));
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
 
-      await Future.delayed(
-        const Duration(seconds: 1),
-      ); // Simulated network delay
+      if (userId == null) {
+        throw Exception('User is not authenticated.');
+      }
+
+      // 2. Update password in secure Supabase Auth (Automatically hashes)
+      await supabase.auth.updateUser(
+        UserAttributes(password: _passController.text),
+      );
+
+      // 3. Update the Full Name in your public 'customers' database table
+      await supabase
+          .from('customers')
+          .update({'full_name': fullName})
+          .eq('firebase_uid', userId);
 
       if (!mounted) return;
 
-      // 2. CRITICAL FIX: Clear the navigation stack!
-      // This wipes out the Login, OTP, and Password screens from history.
-      // Now, the Home screen becomes the absolute base of the app.
+      // 4. Wipe the navigation stack and securely transition to Home screen
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRoutes.home,
-        (route) => false, // Returning false removes all previous routes
+        (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update password. Please try again.'),
+        SnackBar(
+          content: Text('Failed to complete registration: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -91,9 +105,10 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   controller: _passController,
                   enabled: !_isLoading,
                   validator: (value) {
-                    // if (value == null || value.length < 6) {
-                    //   return 'Password must be at least 6 characters';
-                    // }
+                    // I have uncommented this to enforce your security requirements!
+                    if (value == null || value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
                     return null;
                   },
                 ),
