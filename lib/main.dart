@@ -1,5 +1,4 @@
 // Osama
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'core/app_routes.dart';
 import 'core/app_theme.dart';

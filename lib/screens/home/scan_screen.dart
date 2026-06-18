@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../core/app_routes.dart';
 import '../../core/constants.dart';
 import '../../models/product.dart';
 import '../../services/cart_service.dart';
@@ -226,7 +227,16 @@ class _ScanScreenState extends State<ScanScreen>
                       Icons.arrow_back_ios_new_rounded,
                       color: Colors.white,
                     ),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      } else {
+                        Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.home,
+                        );
+                      }
+                    },
                   ),
 
                   const Text(
