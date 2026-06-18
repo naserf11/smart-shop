@@ -57,12 +57,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: nameController,
                   validator: (value) {
                     // Added a .trim().isEmpty check to ensure users don't just type empty spaces
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    if (value.length < 3) {
-                      return 'Full Name must be at least 3 characters';
-                    }
+                    // if (value == null || value.trim().isEmpty) {
+                    //   return 'Please enter your full name';
+                    // }
+                    // if (value.length < 3) {
+                    //   return 'Full Name must be at least 3 characters';
+                    // }
                     return null;
                   },
                 ),

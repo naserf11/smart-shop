@@ -91,9 +91,9 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   controller: _passController,
                   enabled: !_isLoading,
                   validator: (value) {
-                    if (value == null || value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
+                    // if (value == null || value.length < 6) {
+                    //   return 'Password must be at least 6 characters';
+                    // }
                     return null;
                   },
                 ),
