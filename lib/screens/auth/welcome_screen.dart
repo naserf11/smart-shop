@@ -37,16 +37,10 @@ class WelcomeScreen extends StatelessWidget {
             child: Column(
               children: [
                 // Brand block — upper 45% of screen
-                Expanded(
-                  flex: 45,
-                  child: _LogoSection(),
-                ),
+                Expanded(flex: 45, child: _LogoSection()),
 
                 // Auth controls — lower 55% of screen
-                Expanded(
-                  flex: 55,
-                  child: _AuthSection(),
-                ),
+                Expanded(flex: 55, child: _AuthSection()),
               ],
             ),
           ),
@@ -70,7 +64,12 @@ class _GradientBackground extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             Color.fromARGB(255, 10, 30, 0), // Deep forest green
-            Color.fromARGB(255, 255, 255, 255), // Brand green (close to AppColors.primary)
+            Color.fromARGB(
+              255,
+              255,
+              255,
+              255,
+            ), // Brand green (close to AppColors.primary)
             Color.fromARGB(255, 255, 255, 255), // Near-black green at bottom
           ],
           stops: [0.0, 0.45, 1.0],
@@ -82,10 +81,7 @@ class _GradientBackground extends StatelessWidget {
           gradient: RadialGradient(
             center: const Alignment(0, -0.35),
             radius: 0.75,
-            colors: [
-              Colors.white.withOpacity(0.08),
-              Colors.transparent,
-            ],
+            colors: [Colors.white.withOpacity(0.08), Colors.transparent],
           ),
         ),
       ),
@@ -170,9 +166,7 @@ class _AuthSection extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(32),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
             color: Colors.black26,
@@ -223,11 +217,12 @@ class _AuthSection extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // Apple
+              // Email signup
               _SocialButton(
-                iconWidget: const _AppleIcon(),
-                label: 'Continue with Apple',
-                onPressed: () => _handleSocialAuth(context, 'Apple'),
+                iconWidget: const _EmailIcon(),
+                label: 'Continue with Email',
+                onPressed: () =>
+                    Navigator.pushNamed(context, AppRoutes.register),
               ),
 
               const SizedBox(height: 28),
@@ -244,10 +239,7 @@ class _AuthSection extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.pushNamed(
-                      context,
-                      AppRoutes.login,
-                    ),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.login),
                     child: const Text(
                       'Log In',
                       style: TextStyle(
@@ -316,7 +308,8 @@ class _PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.textPrimary, // Dark button — matches reference
+          backgroundColor:
+              AppColors.textPrimary, // Dark button — matches reference
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -360,18 +353,27 @@ class _SocialButton extends StatelessWidget {
           ),
           backgroundColor: Colors.white,
           elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            iconWidget,
+            // Keep a small left gutter so the icon isn't flush to the edge
+            const SizedBox(width: 4),
+            // Ensure the icon has a consistent size box
+            SizedBox(width: 28, height: 28, child: Center(child: iconWidget)),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
+            // Center the label in the remaining horizontal space
+            Expanded(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -392,8 +394,8 @@ class _GoogleIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     // Four-color Google "G" rendered with RichText
     return SizedBox(
-      width: 22,
-      height: 22,
+      width: 28,
+      height: 28,
       child: CustomPaint(painter: _GooglePainter()),
     );
   }
@@ -410,16 +412,16 @@ class _GooglePainter extends CustomPainter {
     canvas.drawCircle(center, radius, bgPaint);
 
     // Draw colored arcs to approximate the Google logo
-    final strokeWidth = size.width * 0.18;
+    final strokeWidth = size.width * 0.16;
 
     void drawArc(double startAngle, double sweepAngle, Color color) {
       final paint = Paint()
         ..color = color
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.butt;
+        ..strokeCap = StrokeCap.round;
       canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius * 0.68),
+        Rect.fromCircle(center: center, radius: radius * 0.72),
         startAngle,
         sweepAngle,
         false,
@@ -438,27 +440,25 @@ class _GooglePainter extends CustomPainter {
     // Green (bottom-right)
     drawArc(-pi * 3 / 4, pi / 2 + 0.1, const Color(0xFF34A853));
 
-    // White horizontal bar (the crossbar of the "G")
+    // White horizontal bar (the crossbar of the "G") — slightly thicker and rounded
     final barPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
+      ..strokeWidth = strokeWidth * 1.05
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(center.dx, center.dy - 0.5),
-      Offset(center.dx + radius * 0.52, center.dy - 0.5),
-      barPaint,
-    );
+    final barStart = Offset(center.dx - radius * 0.05, center.dy - 0.6);
+    final barEnd = Offset(center.dx + radius * 0.52, center.dy - 0.6);
+    canvas.drawLine(barStart, barEnd, barPaint);
 
-    // Blue fill for the right side of the G
+    // Blue fill for the right side of the G — rendered as a rounded stroke
     final blueFill = Paint()
       ..color = const Color(0xFF4285F4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
-      Offset(center.dx + radius * 0.52, center.dy - 0.5),
-      Offset(center.dx + radius * 0.52, center.dy + radius * 0.4),
+      Offset(center.dx + radius * 0.52, center.dy - 0.6),
+      Offset(center.dx + radius * 0.52, center.dy + radius * 0.38),
       blueFill,
     );
   }
@@ -493,15 +493,24 @@ class _FacebookIcon extends StatelessWidget {
   }
 }
 
-class _AppleIcon extends StatelessWidget {
-  const _AppleIcon();
+class _EmailIcon extends StatelessWidget {
+  const _EmailIcon();
 
   @override
   Widget build(BuildContext context) {
-    return const Icon(
-      Icons.apple,
-      size: 24,
-      color: AppColors.textPrimary,
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color(0xFFE6F4FF),
+      ),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.email_outlined,
+        size: 16,
+        color: AppColors.primary,
+      ),
     );
   }
 }
@@ -517,9 +526,7 @@ class _SocialDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(
-          child: Divider(color: Color(0xFFDDDDDD), thickness: 1),
-        ),
+        const Expanded(child: Divider(color: Color(0xFFDDDDDD), thickness: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
@@ -531,9 +538,7 @@ class _SocialDivider extends StatelessWidget {
             ),
           ),
         ),
-        const Expanded(
-          child: Divider(color: Color(0xFFDDDDDD), thickness: 1),
-        ),
+        const Expanded(child: Divider(color: Color(0xFFDDDDDD), thickness: 1)),
       ],
     );
   }
