@@ -7,7 +7,8 @@ import '../../widgets/bottom_nav_bar.dart';
 
 import '../../data/dummy_data.dart';
 import '../../services/product_service_test.dart';
-int currentIndex = 0;
+import '../products/category_products_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -35,51 +36,51 @@ class _HomeScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     bottomNavigationBar: BottomNavBar(
-  currentIndex: currentIndex,
-  onTap: (index) {
-    setState(() {
-      currentIndex = index;
-    });
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: currentIndex,
+        onTap: (index) {
+          setState(() {
+            currentIndex = index;
+          });
 
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.home,
-        );
-        break;
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.home,
+              );
+              break;
 
-      case 1:
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.cart,
-        );
-        break;
+            case 1:
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.cart,
+              );
+              break;
 
-      case 2:
-       Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.scan,
-        );
-        break;
+            case 2:
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.scan,
+              );
+              break;
 
-      case 3:
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.notifications,
-        );
-        break;
+            case 3:
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.notifications,
+              );
+              break;
 
-      case 4:
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.more,
-        );
-        break;
-    }
-  },
-),
+            case 4:
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.more,
+              );
+              break;
+          }
+        },
+      ),
 
       body: SafeArea(
         child: Padding(
@@ -124,6 +125,7 @@ class _HomeScreenState
 
               SizedBox(
                 height: 180,
+
                 child: ListView.builder(
                   scrollDirection:
                       Axis.horizontal,
@@ -151,9 +153,18 @@ class _HomeScreenState
                             category.name,
 
                         onTap: () {
-                          Navigator.pushNamed(
+
+                          Navigator.push(
                             context,
-                            AppRoutes.categories,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CategoryProductsScreen(
+                                categoryId:
+                                    category.id,
+                                categoryName:
+                                    category.name,
+                              ),
+                            ),
                           );
                         },
                       ),
