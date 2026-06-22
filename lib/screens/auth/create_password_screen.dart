@@ -91,31 +91,31 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                 const SizedBox(height: 40),
 
                 Column(
-                children: [
-                  Image.asset(
-                    'assets/images/basket.png',
-                    width: 120,
-                    height: 120,
-                    semanticLabel: 'App Logo',
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'GROCERY PLUS',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  children: [
+                    Image.asset(
+                      'assets/images/basket.png',
+                      width: 120,
+                      height: 120,
+                      semanticLabel: 'App Logo',
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'GROCERY PLUS',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: 80),
 
                 const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Create a Password",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Create a Password",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                 ),
 
