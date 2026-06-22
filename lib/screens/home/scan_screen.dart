@@ -105,6 +105,8 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
         isDiscounted: false,
       );
 
+await _controller.stop();
+
       _showProductSheet(product);
     } catch (e) {
       debugPrint('Lookup error: $e');
@@ -116,11 +118,35 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   void _onDetect(BarcodeCapture capture) {
     if (_isLoading) return;
     for (final barcode in capture.barcodes) {
+<<<<<<< HEAD
       final code = barcode.rawValue;
       if (code != null && code.isNotEmpty) {
         _lookupProduct(code);
         break;
       }
+=======
+      print('RAW VALUE: ${barcode.rawValue}');
+      print('DISPLAY VALUE: ${barcode.displayValue}');
+      print('FORMAT: ${barcode.format}');
+
+  String? code = barcode.displayValue ?? barcode.rawValue;
+
+  if (code == null || code.isEmpty) {
+    continue;
+  }
+
+  if (code.startsWith(']C1')) {
+  code = code.substring(3);
+}
+
+debugPrint('RAW VALUE: ${barcode.rawValue}');
+debugPrint('DISPLAY VALUE: ${barcode.displayValue}');
+debugPrint('SEARCHING BARCODE: $code');
+
+  _lookupProduct(code);
+
+  break;
+>>>>>>> 2f6300bb5f434a9f10612a177cde67cf1a214f1f
     }
   }
 
@@ -160,6 +186,7 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     );
   }
 
+<<<<<<< HEAD
   void _resetScanner() => _controller.start();
 
   @override
@@ -168,6 +195,18 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     _controller.dispose();
     super.dispose();
   }
+=======
+  void _resetScanner() {
+  if (!mounted) return;
+
+  _lastScannedCode = null;
+  _lastScanTime = null;
+
+  try {
+    _controller.start();
+  } catch (_) {}
+}
+>>>>>>> 2f6300bb5f434a9f10612a177cde67cf1a214f1f
 
   @override
   Widget build(BuildContext context) {
