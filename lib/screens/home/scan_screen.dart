@@ -86,6 +86,8 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
         isDiscounted: false,
       );
 
+await _controller.stop();
+
       _showProductSheet(product);
     } catch (e) {
       debugPrint('Lookup error: $e');
@@ -123,17 +125,23 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
       print('DISPLAY VALUE: ${barcode.displayValue}');
       print('FORMAT: ${barcode.format}');
 
-      final code = barcode.rawValue;
+  String? code = barcode.displayValue ?? barcode.rawValue;
 
-      if (code == null || code.isEmpty) {
-        continue;
-      }
+  if (code == null || code.isEmpty) {
+    continue;
+  }
 
-      print('SCANNED CODE: $code');
+  if (code.startsWith(']C1')) {
+  code = code.substring(3);
+}
 
-      _lookupProduct(code);
+debugPrint('RAW VALUE: ${barcode.rawValue}');
+debugPrint('DISPLAY VALUE: ${barcode.displayValue}');
+debugPrint('SEARCHING BARCODE: $code');
 
-      break;
+  _lookupProduct(code);
+
+  break;
     }
   }
 
@@ -179,10 +187,15 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   }
 
   void _resetScanner() {
-    _lastScannedCode = null;
-    _lastScanTime = null;
+  if (!mounted) return;
+
+  _lastScannedCode = null;
+  _lastScanTime = null;
+
+  try {
     _controller.start();
-  }
+  } catch (_) {}
+}
 
   @override
   Widget build(BuildContext context) {

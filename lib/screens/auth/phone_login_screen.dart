@@ -87,11 +87,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
+  child: SingleChildScrollView(
+    padding: const EdgeInsets.all(20),
+    child: Form(
+      key: _formKey,
+      child: Column(
               children: [
                 //// const Spacer(),
                 Align(
@@ -146,8 +146,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   enabled: !_isLoading,
                 ),
 
-                const Spacer(),
-
+const SizedBox(height: 40),
                 PrimaryButton(
                   title: _isLoading ? "Sending..." : "Next",
                   icon: Icons.arrow_forward,
