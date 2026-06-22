@@ -243,7 +243,7 @@ class _AuthSection extends StatelessWidget {
                 iconWidget: const _EmailIcon(),
                 label: 'Continue with Email',
                 onPressed: () =>
-                    Navigator.pushNamed(context, AppRoutes.register),
+                    Navigator.pushNamed(context, AppRoutes.emailAuth),
               ),
 
               const SizedBox(height: 28),
