@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 // Auth Screens
 import '../screens/auth/splash_screen.dart';
-import '../screens/auth/welcome_screen.dart'; // ← NEW
+import '../screens/auth/welcome_screen.dart';
+import '../screens/auth/email_auth_screen.dart';
 import '../screens/auth/phone_login_screen.dart';
 import '../screens/auth/otp_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -38,6 +39,7 @@ class AppRoutes {
   static const otp = '/otp';
   static const register = '/register';
   static const createPassword = '/createPassword';
+  static const emailAuth = '/emailAuth';
 
   // ── Profile ───────────────────────────────────────────────────────────────
   static const profile = '/profile';
@@ -75,6 +77,7 @@ class AppRoutes {
     otp: (_) => const OTPScreen(),
     register: (_) => const RegisterScreen(),
     createPassword: (_) => const CreatePasswordScreen(),
+    emailAuth: (_) => const EmailAuthScreen(),
 
     // Profile
     profile: (_) => const ProfileScreen(),
