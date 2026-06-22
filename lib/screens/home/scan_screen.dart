@@ -24,6 +24,9 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   bool _isTorchOn = false;
   bool _isLoading = false;
   bool _hasPermission = false;
+  String? _lastScannedCode;
+  DateTime? _lastScanTime;
+  static const Duration _scanDebounceDuration = Duration(seconds: 2);
 
   @override
   void initState() {
@@ -105,7 +108,7 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
         isDiscounted: false,
       );
 
-await _controller.stop();
+      await _controller.stop();
 
       _showProductSheet(product);
     } catch (e) {
@@ -117,36 +120,42 @@ await _controller.stop();
 
   void _onDetect(BarcodeCapture capture) {
     if (_isLoading) return;
+    final now = DateTime.now();
+
     for (final barcode in capture.barcodes) {
-<<<<<<< HEAD
-      final code = barcode.rawValue;
-      if (code != null && code.isNotEmpty) {
-        _lookupProduct(code);
-        break;
+      final raw = barcode.rawValue;
+      final display = barcode.displayValue;
+      debugPrint('RAW VALUE: $raw');
+      debugPrint('DISPLAY VALUE: $display');
+      debugPrint('FORMAT: ${barcode.format}');
+
+      String? code = display ?? raw;
+      if (code == null || code.isEmpty) continue;
+
+      if (code.startsWith(']C1')) {
+        code = code.substring(3);
       }
-=======
-      print('RAW VALUE: ${barcode.rawValue}');
-      print('DISPLAY VALUE: ${barcode.displayValue}');
-      print('FORMAT: ${barcode.format}');
 
-  String? code = barcode.displayValue ?? barcode.rawValue;
+      // Debounce: ignore repeated scans of the same code within the debounce window
+      if (_lastScannedCode != null &&
+          _lastScannedCode == code &&
+          _lastScanTime != null) {
+        final diff = now.difference(_lastScanTime!);
+        if (diff < _scanDebounceDuration) {
+          debugPrint(
+            'Ignored duplicate scan ($code) - ${diff.inMilliseconds}ms since last',
+          );
+          continue;
+        }
+      }
 
-  if (code == null || code.isEmpty) {
-    continue;
-  }
+      // Record this scan
+      _lastScannedCode = code;
+      _lastScanTime = now;
 
-  if (code.startsWith(']C1')) {
-  code = code.substring(3);
-}
-
-debugPrint('RAW VALUE: ${barcode.rawValue}');
-debugPrint('DISPLAY VALUE: ${barcode.displayValue}');
-debugPrint('SEARCHING BARCODE: $code');
-
-  _lookupProduct(code);
-
-  break;
->>>>>>> 2f6300bb5f434a9f10612a177cde67cf1a214f1f
+      debugPrint('SEARCHING BARCODE: $code');
+      _lookupProduct(code);
+      break;
     }
   }
 
@@ -186,27 +195,16 @@ debugPrint('SEARCHING BARCODE: $code');
     );
   }
 
-<<<<<<< HEAD
-  void _resetScanner() => _controller.start();
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _controller.dispose();
-    super.dispose();
-  }
-=======
   void _resetScanner() {
-  if (!mounted) return;
+    if (!mounted) return;
 
-  _lastScannedCode = null;
-  _lastScanTime = null;
+    _lastScannedCode = null;
+    _lastScanTime = null;
 
-  try {
-    _controller.start();
-  } catch (_) {}
-}
->>>>>>> 2f6300bb5f434a9f10612a177cde67cf1a214f1f
+    try {
+      _controller.start();
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -243,7 +241,16 @@ debugPrint('SEARCHING BARCODE: $code');
                       Icons.arrow_back_ios_new_rounded,
                       color: Colors.white,
                     ),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      try {
+                        _controller.stop();
+                      } catch (_) {}
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        AppRoutes.home,
+                        (route) => false,
+                      );
+                    },
                   ),
                   const Text(
                     'Scan Product',
