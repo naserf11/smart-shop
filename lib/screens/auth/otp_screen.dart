@@ -101,100 +101,121 @@ class _OTPScreenState extends State<OTPScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // Back button
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () =>
-                      Navigator.pushReplacementNamed(context, AppRoutes.login),
-                ),
-              ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.pushReplacementNamed(
+                            context,
+                            AppRoutes.login,
+                          ),
+                        ),
+                      ),
 
-              const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-              Column(
-                children: [
-                  Image.asset(
-                    'assets/images/basket.png',
-                    width: 120,
-                    height: 120,
-                    semanticLabel: 'App Logo',
+                      Column(
+                        children: [
+                          Image.asset(
+                            'assets/images/basket.png',
+                            width: 120,
+                            height: 120,
+                            semanticLabel: 'App Logo',
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'GROCERY PLUS',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Enter Verification Code",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Code sent to $_phoneNumber",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      TextFormField(
+                        controller: _otpController,
+                        keyboardType: TextInputType.number,
+                        enabled: !_isLoading,
+                        maxLength: 6,
+                        textAlign: TextAlign.center,
+                        autofocus: true,
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 16,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          counterText: "",
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      PrimaryButton(
+                        title: _isLoading ? "Verifying..." : "Verify",
+                        icon: Icons.check_circle_outline,
+                        isLoading: _isLoading,
+                        onPressed: _isLoading ? null : _verifyOtp,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'GROCERY PLUS',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Enter Verification Code",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
-
-              const SizedBox(height: 8),
-
-              // User-friendly context: Show them which number the code was sent to
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Code sent to $_phoneNumber",
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // Clean, standard OTP Input field
-              TextFormField(
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                enabled: !_isLoading,
-                maxLength: 6, // Supabase standard length
-                textAlign: TextAlign.center,
-                autofocus: true, // Automatically pops up the keyboard
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing:
-                      16, // Spaces the numbers out to look like boxes
-                ),
-                // Restrict input strictly to digits
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  counterText: "", // Hides the "0/6" character counter
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-
-              const Spacer(),
-
-              PrimaryButton(
-                title: _isLoading ? "Verifying..." : "Verify",
-                icon: Icons.check_circle_outline,
-                isLoading: _isLoading,
-                onPressed: _isLoading ? null : _verifyOtp,
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
