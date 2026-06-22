@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // Auth Screens
 import '../screens/auth/splash_screen.dart';
-import '../screens/auth/welcome_screen.dart';          // ← NEW
+import '../screens/auth/welcome_screen.dart'; // ← NEW
 import '../screens/auth/phone_login_screen.dart';
 import '../screens/auth/otp_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -32,58 +32,58 @@ import '../screens/orders/scheduled_orders_screen.dart';
 
 class AppRoutes {
   // ── Auth ──────────────────────────────────────────────────────────────────
-  static const splash         = '/';
-  static const welcome        = '/welcome';            // ← NEW
-  static const login          = '/login';
-  static const otp            = '/otp';
-  static const register       = '/register';
+  static const splash = '/';
+  static const welcome = '/welcome'; // ← NEW
+  static const login = '/login';
+  static const otp = '/otp';
+  static const register = '/register';
   static const createPassword = '/createPassword';
 
   // ── Profile ───────────────────────────────────────────────────────────────
-  static const profile     = '/profile';
+  static const profile = '/profile';
   static const editProfile = '/editProfile';
-  static const settings    = '/settings';
+  static const settings = '/settings';
 
   // ── Orders ────────────────────────────────────────────────────────────────
-  static const orders          = '/orders';
-  static const orderHistory    = '/orderHistory';
+  static const orders = '/orders';
+  static const orderHistory = '/orderHistory';
   static const scheduledOrders = '/scheduledOrders';
 
   // ── Discovery ─────────────────────────────────────────────────────────────
   static const search = '/search';
   static const filter = '/filter';
-  static const help   = '/help';
+  static const help = '/help';
 
   // ── Cart & Checkout ───────────────────────────────────────────────────────
-  static const cart     = '/cart';
+  static const cart = '/cart';
   static const checkout = '/checkout';
-  static const payment  = '/payment';
+  static const payment = '/payment';
 
   // ── Main ──────────────────────────────────────────────────────────────────
-  static const home          = '/home';
-  static const categories    = '/categories';
-  static const scan          = '/scan';
+  static const home = '/home';
+  static const categories = '/categories';
+  static const scan = '/scan';
   static const notifications = '/notifications';
-  static const more          = '/more';
+  static const more = '/more';
 
   // ── Route map ─────────────────────────────────────────────────────────────
   static Map<String, WidgetBuilder> routes = {
     // Auth
-    splash:         (_) => const SplashScreen(),
-    welcome:        (_) => const WelcomeScreen(),          // ← NEW
-    login:          (_) => const PhoneLoginScreen(),
-    otp:            (_) => const OTPScreen(),
-    register:       (_) => const RegisterScreen(),
+    splash: (_) => const SplashScreen(),
+    welcome: (_) => const WelcomeScreen(), // ← NEW
+    login: (_) => const PhoneLoginScreen(),
+    otp: (_) => const OTPScreen(),
+    register: (_) => const RegisterScreen(),
     createPassword: (_) => const CreatePasswordScreen(),
 
     // Profile
-    profile:     (_) => const ProfileScreen(),
+    profile: (_) => const ProfileScreen(),
     editProfile: (_) => const EditProfileScreen(),
-    settings:    (_) => const SettingsScreen(),
+    settings: (_) => const SettingsScreen(),
 
     // Orders
-    orders:          (_) => const OrdersScreen(),
-    orderHistory:    (_) => const OrderHistoryScreen(),
+    orders: (_) => const OrdersScreen(),
+    orderHistory: (_) => const OrderHistoryScreen(),
     scheduledOrders: (_) => const ScheduledOrdersScreen(),
 
     // Discovery
@@ -91,15 +91,15 @@ class AppRoutes {
     filter: (_) => const FilterScreen(),
 
     // Cart & Checkout
-    cart:     (_) => const CartScreen(),
+    cart: (_) => const CartScreen(),
     checkout: (_) => const CheckoutScreen(),
-    payment:  (_) => const PaymentScreen(),
+    payment: (_) => const PaymentScreen(),
 
     // Main
-    home:          (_) => const HomeScreen(),
-    categories:    (_) => const CategoriesScreen(),
-    scan:          (_) => const ScanScreen(),
+    home: (_) => const HomeScreen(),
+    categories: (_) => const CategoriesScreen(),
+    scan: (_) => const ScanScreen(),
     notifications: (_) => const NotificationsScreen(),
-    more:          (_) => const MoreScreen(),
+    more: (_) => const MoreScreen(),
   };
 }

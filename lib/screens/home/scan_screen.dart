@@ -18,8 +18,7 @@ class ScanScreen extends StatefulWidget {
   State<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen>
-    with WidgetsBindingObserver {
+class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   late final MobileScannerController _controller;
 
   bool _isTorchOn = false;
@@ -44,73 +43,59 @@ class _ScanScreenState extends State<ScanScreen>
   }
 
   Future<void> _requestPermission() async {
-
-  setState(() {
-
-    _hasPermission = true;
-
-  });
-
-}
-
-Future<void> _lookupProduct(String code) async {
-
-  setState(() => _isLoading = true);
-
-  try {
-
-    final response = await SupabaseService.client
-    .from('products')
-    .select()
-    .eq('barcode', code)
-    .maybeSingle();
-
-    if (!mounted) return;
-
-    if (response == null) {
-
-      _onProductNotFound(code);
-
-      return;
-
-    }
-debugPrint(response.toString());
-    final product = Product(
-  id: response['product_id'].toString(),
-  name: response['product_name'] ?? 'Unknown Product',
-  description: response['description'] ?? '',
-  categoryId: response['category_id']?.toString() ?? '',
-  image: 'assets/images/basket.png',
-
-  price: (response['selling_price'] as num).toDouble(),
-
-  oldPrice: (response['original_price'] as num?)?.toDouble() ??
-      (response['selling_price'] as num).toDouble(),
-
-  stock: (response['stock_quantity'] as num?)?.toInt() ?? 0,
-
-  rating: 0.0,
-
-  isDiscounted: false,
-);
-
-    _showProductSheet(product);
-
-  } catch (e) {
-
-    debugPrint('Lookup error: $e');
-
-  } finally {
-
-    if (mounted) {
-
-      setState(() => _isLoading = false);
-
-    }
-
+    setState(() {
+      _hasPermission = true;
+    });
   }
 
-}
+  Future<void> _lookupProduct(String code) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await SupabaseService.client
+          .from('products')
+          .select()
+          .eq('barcode', code)
+          .maybeSingle();
+
+      if (!mounted) return;
+
+      if (response == null) {
+        _onProductNotFound(code);
+
+        return;
+      }
+      debugPrint(response.toString());
+      final product = Product(
+        id: response['product_id'].toString(),
+        name: response['product_name'] ?? 'Unknown Product',
+        description: response['description'] ?? '',
+        categoryId: response['category_id']?.toString() ?? '',
+        image: 'assets/images/basket.png',
+
+        price: (response['selling_price'] as num).toDouble(),
+
+        oldPrice:
+            (response['original_price'] as num?)?.toDouble() ??
+            (response['selling_price'] as num).toDouble(),
+
+        stock: (response['stock_quantity'] as num?)?.toInt() ?? 0,
+
+        rating: 0.0,
+
+        isDiscounted: false,
+      );
+
+      _showProductSheet(product);
+    } catch (e) {
+      debugPrint('Lookup error: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Pause camera when app is backgrounded — saves battery
@@ -127,29 +112,31 @@ debugPrint(response.toString());
     _controller.dispose();
     super.dispose();
   }
-void _onDetect(BarcodeCapture capture) {
-  print('BARCODES FOUND: ${capture.barcodes.length}');
 
-  if (_isLoading) return;
+  void _onDetect(BarcodeCapture capture) {
+    print('BARCODES FOUND: ${capture.barcodes.length}');
 
-  for (final barcode in capture.barcodes) {
-    print('RAW VALUE: ${barcode.rawValue}');
-    print('DISPLAY VALUE: ${barcode.displayValue}');
-    print('FORMAT: ${barcode.format}');
+    if (_isLoading) return;
 
-    final code = barcode.rawValue;
+    for (final barcode in capture.barcodes) {
+      print('RAW VALUE: ${barcode.rawValue}');
+      print('DISPLAY VALUE: ${barcode.displayValue}');
+      print('FORMAT: ${barcode.format}');
 
-    if (code == null || code.isEmpty) {
-      continue;
+      final code = barcode.rawValue;
+
+      if (code == null || code.isEmpty) {
+        continue;
+      }
+
+      print('SCANNED CODE: $code');
+
+      _lookupProduct(code);
+
+      break;
     }
-
-    print('SCANNED CODE: $code');
-
-    _lookupProduct(code);
-
-    break;
   }
-}
+
   void _onProductNotFound(String code) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -207,10 +194,7 @@ void _onDetect(BarcodeCapture capture) {
           if (!_hasPermission)
             const _PermissionDeniedView()
           else
-            MobileScanner(
-              controller: _controller,
-              onDetect: _onDetect,
-            ),
+            MobileScanner(controller: _controller, onDetect: _onDetect),
 
           // ── Scan bracket overlay ─────────────────────────────────
           if (_hasPermission)
@@ -222,10 +206,7 @@ void _onDetect(BarcodeCapture capture) {
           // ── Top app bar ──────────────────────────────────────────
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -239,10 +220,7 @@ void _onDetect(BarcodeCapture capture) {
                       if (Navigator.canPop(context)) {
                         Navigator.pop(context);
                       } else {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          AppRoutes.home,
-                        );
+                        Navigator.pushReplacementNamed(context, AppRoutes.home);
                       }
                     },
                   ),
@@ -286,10 +264,7 @@ void _onDetect(BarcodeCapture capture) {
                     SizedBox(height: 16),
                     Text(
                       'Looking up product...',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ],
                 ),
@@ -376,9 +351,7 @@ class _ProductResultSheet extends StatelessWidget {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ListView(
             controller: scrollController,
@@ -473,9 +446,7 @@ class _ProductResultSheet extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      inStock
-                          ? 'In Stock (${product.stock})'
-                          : 'Out of Stock',
+                      inStock ? 'In Stock (${product.stock})' : 'Out of Stock',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -493,10 +464,7 @@ class _ProductResultSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   product.description,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 ),
               ],
 
