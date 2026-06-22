@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // Auth Screens
 import '../screens/auth/splash_screen.dart';
+import '../screens/auth/welcome_screen.dart';          // ← NEW
 import '../screens/auth/phone_login_screen.dart';
 import '../screens/auth/otp_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -21,104 +22,84 @@ import '../screens/cart/cart_screen.dart';
 import '../screens/cart/checkout_screen.dart';
 import '../screens/cart/payment_screen.dart';
 
-
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/settings_screen.dart';
-
-
 
 import '../screens/orders/orders_screen.dart';
 import '../screens/orders/order_history_screen.dart';
 import '../screens/orders/scheduled_orders_screen.dart';
 
 class AppRoutes {
-
-  static const splash = '/';
-  static const login = '/login';
-  static const otp = '/otp';
-  static const register = '/register';
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  static const splash         = '/';
+  static const welcome        = '/welcome';            // ← NEW
+  static const login          = '/login';
+  static const otp            = '/otp';
+  static const register       = '/register';
   static const createPassword = '/createPassword';
-  
 
-static const profile = '/profile';
-static const editProfile = '/editProfile';
-static const settings = '/settings';
+  // ── Profile ───────────────────────────────────────────────────────────────
+  static const profile     = '/profile';
+  static const editProfile = '/editProfile';
+  static const settings    = '/settings';
 
-static const orders = '/orders';
-static const orderHistory = '/orderHistory';
-static const scheduledOrders = '/scheduledOrders';
-static const help = '/help';
-static const search = '/search';
-static const filter = '/filter';
+  // ── Orders ────────────────────────────────────────────────────────────────
+  static const orders          = '/orders';
+  static const orderHistory    = '/orderHistory';
+  static const scheduledOrders = '/scheduledOrders';
 
-static const cart = '/cart';
-static const checkout = '/checkout';
-static const payment = '/payment';
+  // ── Discovery ─────────────────────────────────────────────────────────────
+  static const search = '/search';
+  static const filter = '/filter';
+  static const help   = '/help';
 
-  static const home = '/home';
-  static const categories = '/categories';
-  static const scan = '/scan';
+  // ── Cart & Checkout ───────────────────────────────────────────────────────
+  static const cart     = '/cart';
+  static const checkout = '/checkout';
+  static const payment  = '/payment';
+
+  // ── Main ──────────────────────────────────────────────────────────────────
+  static const home          = '/home';
+  static const categories    = '/categories';
+  static const scan          = '/scan';
   static const notifications = '/notifications';
-  static const more = '/more';
+  static const more          = '/more';
 
+  // ── Route map ─────────────────────────────────────────────────────────────
   static Map<String, WidgetBuilder> routes = {
+    // Auth
+    splash:         (_) => const SplashScreen(),
+    welcome:        (_) => const WelcomeScreen(),          // ← NEW
+    login:          (_) => const PhoneLoginScreen(),
+    otp:            (_) => const OTPScreen(),
+    register:       (_) => const RegisterScreen(),
+    createPassword: (_) => const CreatePasswordScreen(),
 
-    splash: (_) => const SplashScreen(),
+    // Profile
+    profile:     (_) => const ProfileScreen(),
+    editProfile: (_) => const EditProfileScreen(),
+    settings:    (_) => const SettingsScreen(),
 
-    login: (_) => PhoneLoginScreen(),
+    // Orders
+    orders:          (_) => const OrdersScreen(),
+    orderHistory:    (_) => const OrderHistoryScreen(),
+    scheduledOrders: (_) => const ScheduledOrdersScreen(),
 
-    otp: (_) => const OTPScreen(),
+    // Discovery
+    search: (_) => const SearchScreen(),
+    filter: (_) => const FilterScreen(),
 
-    register: (_) => RegisterScreen(),
+    // Cart & Checkout
+    cart:     (_) => const CartScreen(),
+    checkout: (_) => const CheckoutScreen(),
+    payment:  (_) => const PaymentScreen(),
 
-profile: (_) =>
-    const ProfileScreen(),
-
-editProfile: (_) =>
-    const EditProfileScreen(),
-
-settings: (_) =>
-    const SettingsScreen(),
-
-
-    createPassword: (_) =>
-        CreatePasswordScreen(),
-
-    home: (_) => const HomeScreen(),
-
-cart: (_) => const CartScreen(),
-
-checkout: (_) =>
-    const CheckoutScreen(),
-
-payment: (_) =>
-    const PaymentScreen(),
-
-    categories: (_) =>
-        const CategoriesScreen(),
-
-    scan: (_) =>
-        const ScanScreen(),
-
-orders: (_) =>
-    const OrdersScreen(),
-
-orderHistory: (_) =>
-    const OrderHistoryScreen(),
-
-scheduledOrders: (_) =>
-    const ScheduledOrdersScreen(),
-
-    notifications: (_) =>
-        const NotificationsScreen(),
-search: (_) =>
-    const SearchScreen(),
-
-filter: (_) =>
-    const FilterScreen(),
-
-    more: (_) =>
-        const MoreScreen(),
+    // Main
+    home:          (_) => const HomeScreen(),
+    categories:    (_) => const CategoriesScreen(),
+    scan:          (_) => const ScanScreen(),
+    notifications: (_) => const NotificationsScreen(),
+    more:          (_) => const MoreScreen(),
   };
 }
