@@ -93,15 +93,39 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const Spacer(),
+                //// const Spacer(),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pushReplacementNamed(
+                      context,
+                      AppRoutes.welcome,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
 
-                Image.asset(
-                  'assets/images/login.png',
-                  height: 200,
-                  semanticLabel: 'Login Presentation Graphic',
+                Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/basket.png',
+                      width: 120,
+                      height: 120,
+                      semanticLabel: 'App Logo',
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'GROCERY PLUS',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 80),
 
                 const Align(
                   alignment: Alignment.centerLeft,

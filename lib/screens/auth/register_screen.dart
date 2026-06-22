@@ -37,19 +37,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 const SizedBox(height: 40),
 
-                const CircleAvatar(
-                  radius: 60,
-                  child: Icon(Icons.camera_alt, size: 40),
+                Column(
+                children: [
+                  Image.asset(
+                    'assets/images/basket.png',
+                    width: 120,
+                    height: 120,
+                    semanticLabel: 'App Logo',
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'GROCERY PLUS',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+                const SizedBox(height: 80),
+
+                const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Enter Your Full Name",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
+              ),
 
-                const SizedBox(height: 30),
+              const SizedBox(height: 15),
 
-                ElevatedButton(
-                  onPressed: () {},
-                  child: const Text("Sync From Facebook"),
-                ),
-
-                const SizedBox(height: 20),
 
                 CustomTextField(
                   hint: "Full Name",

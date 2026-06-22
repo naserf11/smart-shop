@@ -44,12 +44,73 @@ class _ScanScreenState extends State<ScanScreen>
   }
 
   Future<void> _requestPermission() async {
-    final status = await Permission.camera.request();
-    if (mounted) {
-      setState(() => _hasPermission = status.isGranted);
+
+  setState(() {
+
+    _hasPermission = true;
+
+  });
+
+}
+
+Future<void> _lookupProduct(String code) async {
+
+  setState(() => _isLoading = true);
+
+  try {
+
+    final response = await SupabaseService.client
+    .from('products')
+    .select()
+    .eq('barcode', code)
+    .maybeSingle();
+
+    if (!mounted) return;
+
+    if (response == null) {
+
+      _onProductNotFound(code);
+
+      return;
+
     }
+debugPrint(response.toString());
+    final product = Product(
+  id: response['product_id'].toString(),
+  name: response['product_name'] ?? 'Unknown Product',
+  description: response['description'] ?? '',
+  categoryId: response['category_id']?.toString() ?? '',
+  image: 'assets/images/basket.png',
+
+  price: (response['selling_price'] as num).toDouble(),
+
+  oldPrice: (response['original_price'] as num?)?.toDouble() ??
+      (response['selling_price'] as num).toDouble(),
+
+  stock: (response['stock_quantity'] as num?)?.toInt() ?? 0,
+
+  rating: 0.0,
+
+  isDiscounted: false,
+);
+
+    _showProductSheet(product);
+
+  } catch (e) {
+
+    debugPrint('Lookup error: $e');
+
+  } finally {
+
+    if (mounted) {
+
+      setState(() => _isLoading = false);
+
+    }
+
   }
 
+}
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Pause camera when app is backgrounded — saves battery
@@ -66,82 +127,29 @@ class _ScanScreenState extends State<ScanScreen>
     _controller.dispose();
     super.dispose();
   }
+void _onDetect(BarcodeCapture capture) {
+  print('BARCODES FOUND: ${capture.barcodes.length}');
 
-  void _onDetect(BarcodeCapture capture) {
-    // Ignore detections when already processing or loading
-    if (_isLoading) return;
+  if (_isLoading) return;
 
-    final barcode = capture.barcodes.firstOrNull;
-    if (barcode == null || barcode.rawValue == null) return;
+  for (final barcode in capture.barcodes) {
+    print('RAW VALUE: ${barcode.rawValue}');
+    print('DISPLAY VALUE: ${barcode.displayValue}');
+    print('FORMAT: ${barcode.format}');
 
-    final code = barcode.rawValue!.trim();
+    final code = barcode.rawValue;
 
-    // Debounce guard — prevent hammering Supabase on every camera frame
-    final now = DateTime.now();
-    if (_lastScannedCode == code &&
-        _lastScanTime != null &&
-        now.difference(_lastScanTime!) < _debounceDuration) {
-      return;
+    if (code == null || code.isEmpty) {
+      continue;
     }
-    _lastScannedCode = code;
-    _lastScanTime = now;
+
+    print('SCANNED CODE: $code');
 
     _lookupProduct(code);
+
+    break;
   }
-
-  Future<void> _lookupProduct(String code) async {
-    setState(() => _isLoading = true);
-    _controller.stop(); // Pause scanning while fetching
-
-    try {
-      // Query Supabase — match by barcode OR qr_data column
-      final response = await SupabaseService.client
-          .from('products')
-          .select()
-          .or('barcode.eq.$code,qr_data.eq.$code')
-          .maybeSingle();
-
-      if (!mounted) return;
-
-      if (response == null) {
-        _onProductNotFound(code);
-        return;
-      }
-
-      // Map Supabase row to your existing Product model
-      final product = Product(
-        id: response['id'].toString(),
-        name: response['name'] ?? 'Unknown Product',
-        description: response['description'] ?? '',
-        categoryId: response['category_id']?.toString() ?? '',
-        image: response['image_url'] ?? 'assets/images/basket.png',
-        price: (response['price'] as num).toDouble(),
-        oldPrice: (response['old_price'] as num?)?.toDouble() ??
-            (response['price'] as num).toDouble(),
-        stock: (response['stock'] as num?)?.toInt() ?? 0,
-        rating: (response['rating'] as num?)?.toDouble() ?? 0.0,
-        isDiscounted: response['is_discounted'] == true,
-      );
-
-      if (mounted) {
-        _showProductSheet(product);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Network error. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      _resetScanner();
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
+}
   void _onProductNotFound(String code) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
