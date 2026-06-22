@@ -7,9 +7,8 @@ import '../../core/constants.dart';
 import '../../models/product.dart';
 import '../../services/cart_service.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/scan_overlay_painter.dart';
-
-int currentIndex = 2; // Keep your existing nav index
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -20,15 +19,11 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   late final MobileScannerController _controller;
+  final int _currentIndex = 2;
 
   bool _isTorchOn = false;
   bool _isLoading = false;
   bool _hasPermission = false;
-
-  // Debounce: prevent re-processing same code within 3 seconds
-  String? _lastScannedCode;
-  DateTime? _lastScanTime;
-  static const _debounceDuration = Duration(seconds: 3);
 
   @override
   void initState() {
@@ -37,20 +32,51 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     _controller = MobileScannerController(
       detectionSpeed: DetectionSpeed.noDuplicates,
       facing: CameraFacing.back,
-      torchEnabled: false,
     );
     _requestPermission();
   }
 
   Future<void> _requestPermission() async {
-    setState(() {
-      _hasPermission = true;
-    });
+    setState(() => _hasPermission = true);
+  }
+
+  void _onBottomNavTap(int index) {
+    if (_currentIndex == index) return;
+    _controller.stop();
+    switch (index) {
+      case 0:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.home,
+          (route) => false,
+        );
+        break;
+      case 1:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.cart,
+          (route) => false,
+        );
+        break;
+      case 3:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.notifications,
+          (route) => false,
+        );
+        break;
+      case 4:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.more,
+          (route) => false,
+        );
+        break;
+    }
   }
 
   Future<void> _lookupProduct(String code) async {
     setState(() => _isLoading = true);
-
     try {
       final response = await SupabaseService.client
           .from('products')
@@ -59,30 +85,23 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
           .maybeSingle();
 
       if (!mounted) return;
-
       if (response == null) {
         _onProductNotFound(code);
-
         return;
       }
-      debugPrint(response.toString());
+
       final product = Product(
         id: response['product_id'].toString(),
         name: response['product_name'] ?? 'Unknown Product',
         description: response['description'] ?? '',
         categoryId: response['category_id']?.toString() ?? '',
         image: 'assets/images/basket.png',
-
         price: (response['selling_price'] as num).toDouble(),
-
         oldPrice:
             (response['original_price'] as num?)?.toDouble() ??
             (response['selling_price'] as num).toDouble(),
-
         stock: (response['stock_quantity'] as num?)?.toInt() ?? 0,
-
         rating: 0.0,
-
         isDiscounted: false,
       );
 
@@ -90,50 +109,18 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     } catch (e) {
       debugPrint('Lookup error: $e');
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Pause camera when app is backgrounded — saves battery
-    if (state == AppLifecycleState.paused) {
-      _controller.stop();
-    } else if (state == AppLifecycleState.resumed && _hasPermission) {
-      _controller.start();
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _controller.dispose();
-    super.dispose();
   }
 
   void _onDetect(BarcodeCapture capture) {
-    print('BARCODES FOUND: ${capture.barcodes.length}');
-
     if (_isLoading) return;
-
     for (final barcode in capture.barcodes) {
-      print('RAW VALUE: ${barcode.rawValue}');
-      print('DISPLAY VALUE: ${barcode.displayValue}');
-      print('FORMAT: ${barcode.format}');
-
       final code = barcode.rawValue;
-
-      if (code == null || code.isEmpty) {
-        continue;
+      if (code != null && code.isNotEmpty) {
+        _lookupProduct(code);
+        break;
       }
-
-      print('SCANNED CODE: $code');
-
-      _lookupProduct(code);
-
-      break;
     }
   }
 
@@ -142,11 +129,6 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
       SnackBar(
         content: Text('No product found for: $code'),
         backgroundColor: Colors.red,
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: _resetScanner,
-        ),
       ),
     );
     _resetScanner();
@@ -163,8 +145,8 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
           CartService().addToCart(product);
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${product.name} added to cart!'),
+            const SnackBar(
+              content: Text('Added to cart!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -178,10 +160,13 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _resetScanner() {
-    _lastScannedCode = null;
-    _lastScanTime = null;
-    _controller.start();
+  void _resetScanner() => _controller.start();
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -190,41 +175,37 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // ── Camera feed ──────────────────────────────────────────
           if (!_hasPermission)
             const _PermissionDeniedView()
           else
             MobileScanner(controller: _controller, onDetect: _onDetect),
-
-          // ── Scan bracket overlay ─────────────────────────────────
           if (_hasPermission)
             CustomPaint(
               painter: ScanOverlayPainter(),
               child: const SizedBox.expand(),
             ),
-
-          // ── Top app bar ──────────────────────────────────────────
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: BottomNavBar(
+              currentIndex: _currentIndex,
+              onTap: _onBottomNavTap,
+            ),
+          ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Back button
                   IconButton(
                     icon: const Icon(
                       Icons.arrow_back_ios_new_rounded,
                       color: Colors.white,
                     ),
-                    onPressed: () {
-                      if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
-                      } else {
-                        Navigator.pushReplacementNamed(context, AppRoutes.home);
-                      }
-                    },
+                    onPressed: () => Navigator.pop(context),
                   ),
-
                   const Text(
                     'Scan Product',
                     style: TextStyle(
@@ -233,8 +214,6 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
-                  // Torch toggle
                   IconButton(
                     icon: Icon(
                       _isTorchOn
@@ -251,23 +230,11 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
-
-          // ── Loading overlay ──────────────────────────────────────
           if (_isLoading)
             Container(
               color: Colors.black54,
               child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 16),
-                    Text(
-                      'Looking up product...',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ],
-                ),
+                child: CircularProgressIndicator(color: Colors.white),
               ),
             ),
         ],
@@ -276,57 +243,29 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Permission Denied View
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _PermissionDeniedView extends StatelessWidget {
   const _PermissionDeniedView();
-
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.camera_alt_outlined,
-              size: 64,
-              color: Colors.white54,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Camera access required',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Please allow camera access in Settings to scan products.',
-              style: TextStyle(color: Colors.white60),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 28),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.settings_outlined),
-              label: const Text('Open Settings'),
-              onPressed: openAppSettings,
-            ),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.camera_alt, size: 64, color: Colors.white54),
+          const SizedBox(height: 20),
+          const Text(
+            'Camera access required',
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+          ElevatedButton(
+            onPressed: openAppSettings,
+            child: const Text('Open Settings'),
+          ),
+        ],
       ),
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Product Result Bottom Sheet
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _ProductResultSheet extends StatelessWidget {
   final Product product;
@@ -341,175 +280,35 @@ class _ProductResultSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool inStock = product.stock > 0;
-
     return DraggableScrollableSheet(
-      initialChildSize: 0.52,
-      minChildSize: 0.35,
-      maxChildSize: 0.85,
-      builder: (_, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: ListView(
-            controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-            children: [
-              // Drag handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      initialChildSize: 0.5,
+      builder: (_, controller) => Container(
+        color: Colors.white,
+        child: ListView(
+          controller: controller,
+          padding: const EdgeInsets.all(24),
+          children: [
+            Text(
+              product.name,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'RM ${product.price.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
               ),
-
-              // Product image
-              Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: product.image.startsWith('assets/')
-                      ? Image.asset(product.image, fit: BoxFit.contain)
-                      : Image.network(
-                          product.image,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.image_not_supported,
-                            size: 60,
-                            color: Colors.grey,
-                          ),
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Product name
-              Text(
-                product.name,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // Price + stock row
-              Row(
-                children: [
-                  Text(
-                    'RM ${product.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  if (product.isDiscounted &&
-                      product.oldPrice > product.price) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      'RM ${product.oldPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                        decoration: TextDecoration.lineThrough,
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: inStock
-                          ? Colors.green.shade50
-                          : Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: inStock ? Colors.green : Colors.red,
-                      ),
-                    ),
-                    child: Text(
-                      inStock ? 'In Stock (${product.stock})' : 'Out of Stock',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: inStock
-                            ? Colors.green.shade700
-                            : Colors.red.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Description
-              if (product.description.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(
-                  product.description,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                ),
-              ],
-
-              const SizedBox(height: 28),
-
-              // Action buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: onDismiss,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.add_shopping_cart_rounded),
-                      label: const Text('Add to Cart'),
-                      onPressed: inStock ? onAddToCart : null,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey.shade300,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        minimumSize: const Size(0, 50),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: onAddToCart,
+              child: const Text('Add to Cart'),
+            ),
+            OutlinedButton(onPressed: onDismiss, child: const Text('Cancel')),
+          ],
+        ),
+      ),
     );
   }
 }

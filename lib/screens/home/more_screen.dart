@@ -1,25 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_routes.dart';
+import '../../widgets/bottom_nav_bar.dart';
 
-class MoreScreen extends StatelessWidget {
+class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});
+
+  @override
+  State<MoreScreen> createState() => _MoreScreenState();
+}
+
+class _MoreScreenState extends State<MoreScreen> {
+  // Index 4 corresponds to the "More" tab
+  final int _currentIndex = 4;
+
+  void _onBottomNavTap(int index) {
+    if (_currentIndex == index) return;
+
+    switch (index) {
+      case 0:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.home,
+          (route) => false,
+        );
+        break;
+      case 1:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.cart,
+          (route) => false,
+        );
+        break;
+      case 2:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.scan,
+          (route) => false,
+        );
+        break;
+      case 3:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.notifications,
+          (route) => false,
+        );
+        break;
+      case 4:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("More"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            } else {
-              Navigator.pushReplacementNamed(context, AppRoutes.home);
-            }
-          },
-        ),
+      appBar: AppBar(title: const Text("More")),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onBottomNavTap,
       ),
       body: ListView(
         children: [
@@ -62,7 +100,6 @@ class MoreScreen extends StatelessWidget {
             title: const Text("Logout"),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
-              // Show confirmation dialog
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
@@ -87,11 +124,8 @@ class MoreScreen extends StatelessWidget {
               if (confirm != true) return;
 
               try {
-                // Actually sign out from Supabase so the session is cleared
                 await Supabase.instance.client.auth.signOut();
-              } catch (_) {
-                // Even if sign-out fails remotely, clear local state and proceed
-              }
+              } catch (_) {}
 
               if (!context.mounted) return;
 

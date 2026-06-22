@@ -1,30 +1,62 @@
 import 'package:flutter/material.dart';
-import '../../core/app_routes.dart'; // Ensure you import your routes
+import '../../core/app_routes.dart';
+import '../../widgets/bottom_nav_bar.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  // Index 3 corresponds to the "Notifications" tab
+  final int _currentIndex = 3;
+
+  void _onBottomNavTap(int index) {
+    if (_currentIndex == index) return;
+
+    switch (index) {
+      case 0:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.home,
+          (route) => false,
+        );
+        break;
+      case 1:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.cart,
+          (route) => false,
+        );
+        break;
+      case 2:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.scan,
+          (route) => false,
+        );
+        break;
+      case 3:
+        break;
+      case 4:
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.more,
+          (route) => false,
+        );
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Notifications"),
-        // Manually override the leading widget to force the back button
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ), // Adjust color if needed
-          onPressed: () {
-            // Safely check if we can just pop the screen off the stack
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            } else {
-              // If the stack is empty, force navigation back to the Home Screen
-              Navigator.pushReplacementNamed(context, AppRoutes.home);
-            }
-          },
-        ),
+      appBar: AppBar(title: const Text("Notifications")),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onBottomNavTap,
       ),
       body: ListView(
         children: const [
