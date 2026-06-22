@@ -69,7 +69,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () {
               Navigator.pushNamedAndRemoveUntil(
                 context,
-                AppRoutes.login,
+                AppRoutes.welcome,
                 (route) => false,
               );
             },

@@ -107,12 +107,32 @@ class _OTPScreenState extends State<OTPScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              const SizedBox(height: 40),
+              // Back button
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () =>
+                      Navigator.pushReplacementNamed(context, AppRoutes.login),
+                ),
+              ),
 
-              Image.asset(
-                'assets/images/login.png',
-                height: 180,
-                semanticLabel: 'OTP Verification Graphic',
+              const SizedBox(height: 20),
+
+              Column(
+                children: [
+                  Image.asset(
+                    'assets/images/basket.png',
+                    width: 120,
+                    height: 120,
+                    semanticLabel: 'App Logo',
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'GROCERY PLUS',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 30),
