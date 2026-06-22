@@ -24,7 +24,7 @@ class GroceryPlusApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Grocery Plus',
       theme: AppTheme.lightTheme,
-      initialRoute: AppRoutes.splash,
+      initialRoute: AppRoutes.welcome,
       routes: AppRoutes.routes,
     );
   }

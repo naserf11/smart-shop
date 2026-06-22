@@ -1,23 +1,44 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_routes.dart';
 import '../../core/constants.dart';
 
 /// WelcomeScreen — the first screen after the splash.
-///
-/// Responsibilities:
-///   • Present the brand identity clearly
-///   • Route new users through phone registration
-///   • Route returning users to login
-///   • Provide social OAuth entry points (UI ready; backend wired via Supabase)
-///
-/// Architecture note:
-///   Social auth providers (Google, Facebook, Apple) require:
-///     1. Provider enabled in Supabase Dashboard → Authentication → Providers
-///     2. OAuth credentials (Client ID + Secret) from each platform
-///     3. Supabase redirect URL added to each platform's allowed URIs
+///   3. Supabase redirect URL added to each platform's allowed URIs
 ///   Call: Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.<provider>)
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  late final StreamSubscription<AuthState> _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to authentication state changes.
+    // When the browser redirects back to the app, Supabase fires the 'signedIn' event.
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
+      data,
+    ) {
+      if (data.event == AuthChangeEvent.signedIn) {
+        if (mounted) {
+          // Send the authenticated user to the Home Screen
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -260,34 +281,35 @@ class _AuthSection extends StatelessWidget {
     );
   }
 
-  /// Placeholder handler for social OAuth providers.
-  ///
-  /// To wire up fully:
-  ///   1. Enable the provider in Supabase Dashboard
-  ///   2. Uncomment the Supabase call below
-  ///   3. Add supabase_flutter's OAuth redirect handling to your app
-  void _handleSocialAuth(BuildContext context, String provider) {
-    // TODO: Implement Supabase OAuth per provider:
-    //
-    // Google:
-    //   await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.google,
-    //     redirectTo: 'io.supabase.groceryplus://login-callback');
-    //
-    // Facebook:
-    //   await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.facebook,
-    //     redirectTo: 'io.supabase.groceryplus://login-callback');
-    //
-    // Apple:
-    //   await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.apple,
-    //     redirectTo: 'io.supabase.groceryplus://login-callback');
+  /// Handler for social OAuth providers using Supabase.
+  Future<void> _handleSocialAuth(BuildContext context, String provider) async {
+    try {
+      OAuthProvider oauthProvider;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$provider sign-in coming soon'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.primary,
-      ),
-    );
+      if (provider == 'Google') {
+        oauthProvider = OAuthProvider.google;
+      } else if (provider == 'Facebook') {
+        oauthProvider = OAuthProvider.facebook;
+      } else {
+        throw Exception('Unsupported provider: $provider');
+      }
+
+      await Supabase.instance.client.auth.signInWithOAuth(
+        oauthProvider,
+        // The deep link is now uncommented and passed to Supabase
+        redirectTo: 'io.supabase.smartshop://login-callback',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to sign in with $provider.'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    }
   }
 }
 

@@ -6,10 +6,8 @@ import '../../core/app_routes.dart';
 /// SplashScreen
 ///
 /// Shown for 3 seconds on first launch.
-/// Also acts as a session gate: if a valid Supabase session already exists
-/// (i.e., returning authenticated user), it skips the Welcome/Auth flow and
-/// goes straight to Home. This prevents logged-in users from seeing the
-/// login screen on every launch.
+/// Checks for a valid, non-expired Supabase session. If one exists,
+/// the user is sent directly to Home. Otherwise, they see the Welcome screen.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -25,18 +23,26 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigate() async {
-    // Wait for the splash to be visible
     await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
-    // ── Session gate ────────────────────────────────────────────────────────
-    // If the user already has an active Supabase session, send them home.
-    // Otherwise, send them to the WelcomeScreen to sign up or log in.
     final session = Supabase.instance.client.auth.currentSession;
-    final destination = session != null ? AppRoutes.home : AppRoutes.welcome;
+
+    // Only skip to home if the session exists AND is not expired
+    final bool isValidSession = session != null && !_isSessionExpired(session);
+
+    final destination = isValidSession ? AppRoutes.home : AppRoutes.welcome;
 
     Navigator.pushReplacementNamed(context, destination);
+  }
+
+  bool _isSessionExpired(Session session) {
+    // expiresAt is in seconds since epoch; compare against current time
+    final expiresAt = session.expiresAt;
+    if (expiresAt == null) return false;
+    final expiryDate = DateTime.fromMillisecondsSinceEpoch(expiresAt * 1000);
+    return DateTime.now().isAfter(expiryDate);
   }
 
   @override
@@ -47,7 +53,6 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // TODO: Replace with your final logo asset
             Image.asset(
               'assets/images/basket.png',
               width: 120,
