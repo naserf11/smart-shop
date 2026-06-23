@@ -21,39 +21,19 @@ class _CartScreenState extends State<CartScreen> {
 
     switch (index) {
       case 0:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.home,
-          (r) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.home);
         break;
       case 1:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.cart,
-          (r) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.cart);
         break;
       case 2:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.scan,
-          (r) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.scan);
         break;
       case 3:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.notifications,
-          (r) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.more,
-          (r) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.more);
         break;
     }
   }
@@ -136,6 +116,7 @@ class _CartScreenState extends State<CartScreen> {
                               content: Text(
                                 '${removedItem.product.name} removed',
                               ),
+                              duration: const Duration(seconds: 3),
                               action: SnackBarAction(
                                 label: 'Undo',
                                 onPressed: () {
@@ -274,6 +255,7 @@ class _CartScreenState extends State<CartScreen> {
                                           content: Text(
                                             '${removedItem.product.name} removed',
                                           ),
+                                          duration: const Duration(seconds: 3),
                                           action: SnackBarAction(
                                             label: 'Undo',
                                             onPressed: () {

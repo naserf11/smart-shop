@@ -48,32 +48,16 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     _controller.stop();
     switch (index) {
       case 0:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.home,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.home);
         break;
       case 1:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.cart,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.cart);
         break;
       case 3:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.notifications,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.more,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.more);
         break;
     }
   }
