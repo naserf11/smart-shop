@@ -125,8 +125,8 @@ class _LogoSection extends StatelessWidget {
           // Recommended: an SVG or high-res PNG with a transparent background.
           Image.asset(
             'assets/images/basket.png',
-            width: 100,
-            height: 100,
+            width: 140,
+            height: 140,
             // Tint white so it pops against the green background
             color: Colors.white,
             colorBlendMode: BlendMode.srcIn,
@@ -152,10 +152,10 @@ class _LogoSection extends StatelessWidget {
           const Text(
             'GROCERY PLUS',
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
+    color: Color(0xFF1E1E1E),
+                  fontSize: 36,
               fontWeight: FontWeight.w800,
-              letterSpacing: 3.5,
+              letterSpacing: 2,
             ),
           ),
 
@@ -164,7 +164,7 @@ class _LogoSection extends StatelessWidget {
           const Text(
             'Smart Shopping, Simplified',
             style: TextStyle(
-              color: Color.fromARGB(179, 0, 0, 0),
+            color: Colors.black54,
               fontSize: 14,
               letterSpacing: 1.2,
               fontWeight: FontWeight.w400,
