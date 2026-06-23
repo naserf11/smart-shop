@@ -317,14 +317,16 @@ class _CartScreenState extends State<CartScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PaymentScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: cart.items.isEmpty
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PaymentScreen(),
+                              ),
+                            );
+                          },
                     child: const Text("Proceed To Payment"),
                   ),
                 ),

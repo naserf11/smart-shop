@@ -46,11 +46,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── 1. Background ─────────────────────────────────────────────────
-          // TODO: Replace 'assets/images/welcome_bg.png' with a high-quality
-          // grocery/food photography image for the final release.
-          // Recommended resolution: 1080×1920px (portrait).
-          // For now, this uses a rich green gradient that matches brand identity.
+
           _GradientBackground(),
 
           // ── 2. Logo + brand section ───────────────────────────────────────
@@ -58,14 +54,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             child: Column(
               children: [
                 // Brand block — upper 45% of screen
-               Expanded(
-  flex: 45,
-  child: _LogoSection(),
-),
-Expanded(
-  flex: 55,
-  child: _AuthSection(),
-),              ],
+                Expanded(flex: 45, child: _LogoSection()),
+                Expanded(flex: 55, child: _AuthSection()),
+              ],
             ),
           ),
         ],
@@ -121,62 +112,64 @@ class _LogoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-  child: Center(
-    child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // TODO: Replace with your actual logo file.
-          // Recommended: an SVG or high-res PNG with a transparent background.
-          Container(
-  width: 140,
-  height: 140,
-  padding: const EdgeInsets.all(15),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    shape: BoxShape.circle,
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.1),
-        blurRadius: 25,
-        offset: const Offset(0, 10),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+
+            const SizedBox(height: 20),
+
+            Container(
+              width: 160,
+              height: 160,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 25,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/basket.png',
+                  width: 144,
+                  height: 144,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            const Text(
+              'GROCERY PLUS',
+              style: TextStyle(
+                color: const Color(0xFF122E11),
+                fontSize: 42,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Smart Shopping, Simplified',
+              style: TextStyle(
+                color: Colors.black54,
+                fontSize: 14,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
-    ],
-  ),
-  child: Image.asset(
-    'assets/images/basket.png',
-    width: 110,
-    height: 110,
-    fit: BoxFit.contain,
-  ),
-),
-const SizedBox(height: 20),
-
-          // App name — TODO: swap text for an SVG wordmark if available
-          const Text(
-            'GROCERY PLUS',
-            style: TextStyle(
-    color: Color(0xFF1E1E1E),
-                  fontSize: 42,
-fontWeight: FontWeight.w900,
-              letterSpacing: 2,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Smart Shopping, Simplified',
-            style: TextStyle(
-            color: Colors.black54,
-              fontSize: 14,
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-          ),
-  ),
-);
+    );
   }
 }
 
@@ -188,20 +181,18 @@ class _AuthSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-  width: double.infinity,
-  decoration: const BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.vertical(
-      top: Radius.circular(32),
-    ),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black26,
-        blurRadius: 20,
-        offset: Offset(0, -4),
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 20,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
-    ],
-  ),
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
         child: Padding(
@@ -336,32 +327,28 @@ class _PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-  backgroundColor: const Color(0xFF2E7D32),
-  foregroundColor: Colors.white,
-  elevation: 0,
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(30),
-  ),
-),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
         child: Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    const Icon(
-      Icons.phone_rounded,
-      color: Colors.white,
-      size: 20,
-    ),
-    const SizedBox(width: 10),
-    Text(
-      label,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.3,
-      ),
-    ),
-  ],
-),
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.phone_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -430,11 +417,7 @@ class _GoogleIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/images/google.png',
-      width: 28,
-      height: 28,
-    );
+    return Image.asset('assets/images/google.png', width: 28, height: 28);
   }
 }
 
@@ -443,15 +426,10 @@ class _FacebookIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/images/facebook.png',
-      width: 22,
-      height: 22,
-    );
+    return Image.asset('assets/images/facebook.png', width: 22, height: 22);
   }
 }
 
- 
 class _EmailIcon extends StatelessWidget {
   const _EmailIcon();
 

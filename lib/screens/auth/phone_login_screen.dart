@@ -108,11 +108,14 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
                 Column(
                   children: [
-                    Image.asset(
-                      'assets/images/basket.png',
-                      width: 120,
-                      height: 120,
-                      semanticLabel: 'App Logo',
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/basket.png',
+                        width: 120,
+                        height: 120,
+                        semanticLabel: 'App Logo',
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
