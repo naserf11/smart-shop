@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../widgets/custom_textfield.dart';
 import '../../widgets/primary_button.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
