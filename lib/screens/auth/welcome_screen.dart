@@ -259,7 +259,7 @@ class _AuthSection extends StatelessWidget {
                   GestureDetector(
                     onTap: () => Navigator.pushNamed(context, AppRoutes.login),
                     child: const Text(
-                      'Log In',
+                      'Sign In',
                       style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 14,
