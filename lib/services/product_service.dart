@@ -9,6 +9,7 @@ class ProductService {
       final response = await supabase
           .from('products')
           .select()
+          .eq('is_active', true)
           .order('created_at', ascending: false);
       
       return (response as List<dynamic>)
@@ -23,15 +24,16 @@ class ProductService {
 
   Future<List<Product>> getOffers() async {
     try {
-      // Note: Your DB doesn't have 'is_discounted' column
-      // Returning all products for now - customize filter based on your actual schema
+      // Products where selling_price < original_price (i.e. discounted)
       final response = await supabase
           .from('products')
           .select()
+          .eq('is_active', true)
           .order('created_at', ascending: false);
       
       return (response as List<dynamic>)
           .map((json) => Product.fromJson(json as Map<String, dynamic>))
+          .where((product) => product.oldPrice > product.price && product.oldPrice > 0)
           .toList();
     } catch (e, st) {
       print('❌ Error fetching offers: $e');
@@ -42,11 +44,10 @@ class ProductService {
 
   Future<List<Product>> getBestSellers() async {
     try {
-      // Note: Your DB doesn't have 'rating' column
-      // Returning top 10 most recently updated products for now
       final response = await supabase
           .from('products')
           .select()
+          .eq('is_active', true)
           .order('updated_at', ascending: false)
           .limit(10);
       
@@ -65,7 +66,7 @@ class ProductService {
       final response = await supabase
           .from('products')
           .select()
-          .eq('id', id)
+          .eq('product_id', id)
           .single();
       
       return Product.fromJson(response);
@@ -82,6 +83,7 @@ class ProductService {
           .from('products')
           .select()
           .eq('category_id', categoryId)
+          .eq('is_active', true)
           .order('created_at', ascending: false);
       
       return (response as List<dynamic>)
@@ -99,7 +101,8 @@ class ProductService {
       final response = await supabase
           .from('products')
           .select()
-          .ilike('name', '%$keyword%')
+          .eq('is_active', true)
+          .ilike('product_name', '%$keyword%')
           .order('created_at', ascending: false);
       
       return (response as List<dynamic>)
@@ -109,6 +112,23 @@ class ProductService {
       print('❌ Error searching products: $e');
       print('Stack: $st');
       rethrow;
+    }
+  }
+
+  Future<Product?> getProductByBarcode(String barcode) async {
+    try {
+      final response = await supabase
+          .from('products')
+          .select()
+          .eq('barcode', barcode)
+          .eq('is_active', true)
+          .single();
+      
+      return Product.fromJson(response);
+    } catch (e, st) {
+      print('❌ Error fetching product by barcode: $e');
+      print('Stack: $st');
+      return null;
     }
   }
 }

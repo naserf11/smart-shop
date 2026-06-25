@@ -9,6 +9,7 @@ class CategoryService {
       final response = await supabase
           .from('categories')
           .select()
+          .eq('is_active', true)
           .order('created_at', ascending: false);
       
       return (response as List<dynamic>)
@@ -26,7 +27,7 @@ class CategoryService {
       final response = await supabase
           .from('categories')
           .select()
-          .eq('id', id)
+          .eq('category_id', id)
           .single();
       
       return Category.fromJson(response);

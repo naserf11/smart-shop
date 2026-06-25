@@ -10,20 +10,21 @@ class Category {
   });
 
   // Factory constructor to create Category from Supabase JSON
+  // Maps actual DB columns: category_id, category_name, image_url
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      image: json['image']?.toString() ?? '',
+      id: json['category_id']?.toString() ?? json['id']?.toString() ?? '',
+      name: json['category_name']?.toString() ?? json['name']?.toString() ?? '',
+      image: json['image_url']?.toString() ?? json['image']?.toString() ?? '',
     );
   }
 
   // Convert Category to JSON for Supabase
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'name': name,
-      'image': image,
+      'category_id': id,
+      'category_name': name,
+      'image_url': image,
     };
   }
 }
