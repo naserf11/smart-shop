@@ -370,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Row(
                                       children: [
                                         Text(
-                                          '₦${product.price}',
+                                          'RM ${product.price}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
@@ -379,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         const SizedBox(width: 8),
                                         if (product.oldPrice > 0)
                                           Text(
-                                            '₦${product.oldPrice}',
+                                            'RM ${product.oldPrice}',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey.shade600,

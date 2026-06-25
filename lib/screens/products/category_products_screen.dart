@@ -98,14 +98,14 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                           children: [
                             if (product.oldPrice > 0)
                               Text(
-                                '₦${product.oldPrice}',
+                                'RM ${product.oldPrice}',
                                 style: const TextStyle(
                                   decoration: TextDecoration.lineThrough,
                                   color: Colors.grey,
                                 ),
                               ),
                             Text(
-                              '₦${product.price}',
+                              'RM ${product.price}',
                               style: const TextStyle(
                                 color: Colors.orange,
                                 fontWeight: FontWeight.bold,
