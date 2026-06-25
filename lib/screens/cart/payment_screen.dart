@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
+import 'payment_simulation_screen.dart';
 
 
 class PaymentScreen extends StatefulWidget {
@@ -104,33 +105,16 @@ class _PaymentScreenState
                 ),
 
                 onPressed: () {
-
-                  if (selectedMethod ==
-                      "Credit / Debit Card") {
-
-                    // Stripe page
-                    Navigator.pushNamed(
-                      context,
-                      '/cardPayment',
-                    );
-
-                  } else if (selectedMethod ==
-                      "Online Payment via FPX") {
-
-                    // FPX page
-                    Navigator.pushNamed(
-                      context,
-                      '/fpxPayment',
-                    );
-
-                  } else {
-
-                    // Touch n Go page
-                    Navigator.pushNamed(
-                      context,
-                      '/tngPayment',
-                    );
-                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PaymentSimulationScreen(
+                        paymentMethod:
+                            selectedMethod,
+                      ),
+                    ),
+                  );
                 },
 
                 child: const Text(
