@@ -41,6 +41,8 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
   // ── Animation (smooth height change when toggling mode) ───────────────────
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;
+  // Ensure we only read route arguments once
+  bool _didInitializeFromArgs = false;
 
   @override
   void initState() {
@@ -54,6 +56,21 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
       curve: Curves.easeInOut,
     );
     _animController.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInitializeFromArgs) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null && args is Map && args.containsKey('isSignUp')) {
+        final val = args['isSignUp'];
+        if (val is bool) {
+          setState(() => _isSignUp = val);
+        }
+      }
+      _didInitializeFromArgs = true;
+    }
   }
 
   @override
@@ -84,10 +101,31 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
   }
 
   String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Please enter your email address';
-    final emailRegex = RegExp(r'^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$');
-    if (!emailRegex.hasMatch(v.trim())) return 'Enter a valid email address';
+    if (v == null || v.trim().isEmpty) return 'Please enter your email address or phone number';
+    final trimmed = v.trim();
+    // If input contains an @, validate as email
+    if (trimmed.contains('@')) {
+      final emailRegex = RegExp(r'^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$');
+      if (!emailRegex.hasMatch(trimmed)) return 'Enter a valid email address';
+      return null;
+    }
+
+    // Otherwise accept phone-like input (digits, may include +, spaces, dashes)
+    final digits = trimmed.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.length < 7) return 'Enter a valid phone number';
     return null;
+  }
+
+  bool _looksLikePhoneInput(String input) {
+    if (input.isEmpty) return false;
+    if (input.contains('@')) return false;
+    final digits = input.replaceAll(RegExp(r'[^0-9]'), '');
+    return digits.length >= 7;
+  }
+
+  String _phoneToAliasEmail(String phone) {
+    final digits = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    return '$digits@phone.groceryplus';
   }
 
   String? _validatePassword(String? v) {
@@ -124,9 +162,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
   }
 
   Future<void> _signUp() async {
-    final email = _emailController.text.trim();
+    final raw = _emailController.text.trim();
     final password = _passwordController.text;
     final fullName = _nameController.text.trim();
+
+    final email = _looksLikePhoneInput(raw) ? _phoneToAliasEmail(raw) : raw;
 
     final response = await Supabase.instance.client.auth.signUp(
       email: email,
@@ -148,8 +188,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
   }
 
   Future<void> _signIn() async {
+    final raw = _emailController.text.trim();
+    final email = _looksLikePhoneInput(raw) ? _phoneToAliasEmail(raw) : raw;
+
     final response = await Supabase.instance.client.auth.signInWithPassword(
-      email: _emailController.text.trim(),
+      email: email,
       password: _passwordController.text,
     );
 
@@ -310,10 +353,10 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
                         const SizedBox(height: 14),
                       ],
 
-                      // Email
+                      // Email (or phone for login)
                       CustomTextField(
-                        hint: 'Email Address',
-                        prefixIcon: Icons.email_outlined,
+                        hint: _isSignUp ? 'Email Address' : 'Email Address or Phone Number',
+                        prefixIcon: _isSignUp ? Icons.email_outlined : null,
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         enabled: !_isLoading,
@@ -329,6 +372,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
                         obscure: _obscurePassword,
                         enabled: !_isLoading,
                         validator: _validatePassword,
+                        showIcon: _isSignUp,
                         onToggle: () => setState(
                           () => _obscurePassword = !_obscurePassword,
                         ),
@@ -343,6 +387,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
                           obscure: _obscureConfirm,
                           enabled: !_isLoading,
                           validator: _validateConfirm,
+                          showIcon: _isSignUp,
                           onToggle: () => setState(
                             () => _obscureConfirm = !_obscureConfirm,
                           ),
@@ -489,9 +534,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen>
               ),
             ),
             onPressed: () async {
-              final email = emailController.text.trim();
-              if (email.isEmpty) return;
+              final input = emailController.text.trim();
+              if (input.isEmpty) return;
               Navigator.pop(ctx);
+
+              final email = _looksLikePhoneInput(input) ? _phoneToAliasEmail(input) : input;
 
               try {
                 await Supabase.instance.client.auth.resetPasswordForEmail(
@@ -529,6 +576,7 @@ class _PasswordField extends StatelessWidget {
   final TextEditingController controller;
   final bool obscure;
   final bool enabled;
+  final bool showIcon;
   final String? Function(String?)? validator;
   final VoidCallback onToggle;
 
@@ -539,6 +587,7 @@ class _PasswordField extends StatelessWidget {
     required this.enabled,
     required this.validator,
     required this.onToggle,
+    this.showIcon = true,
   });
 
   @override
@@ -552,7 +601,7 @@ class _PasswordField extends StatelessWidget {
         hintText: hint,
         filled: true,
         fillColor: AppColors.cardColor,
-        prefixIcon: const Icon(Icons.lock_outline),
+        prefixIcon: showIcon ? const Icon(Icons.lock_outline) : null,
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,

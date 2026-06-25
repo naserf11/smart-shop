@@ -5,6 +5,7 @@ import '../screens/auth/splash_screen.dart';
 import '../screens/auth/welcome_screen.dart';
 import '../screens/auth/email_auth_screen.dart';
 import '../screens/auth/login.dart';
+import '../screens/auth/phone_login_screen.dart';
 import '../screens/auth/otp_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/create_password_screen.dart';
@@ -36,6 +37,7 @@ class AppRoutes {
   static const splash = '/';
   static const welcome = '/welcome'; // ← NEW
   static const login = '/login';
+  static const phoneLogin = '/phoneLogin';
   static const otp = '/otp';
   static const register = '/register';
   static const createPassword = '/createPassword';
@@ -74,6 +76,7 @@ class AppRoutes {
   splash: (_) => const SplashScreen(),
     welcome: (_) => const WelcomeScreen(), // ← NEW
   login: (_) => const LoginScreen(),
+    phoneLogin: (_) => const PhoneLoginScreen(),
     otp: (_) => const OTPScreen(),
     register: (_) => const RegisterScreen(),
     createPassword: (_) => const CreatePasswordScreen(),

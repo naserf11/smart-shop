@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../data/dummy_data.dart';
+import '../../models/product.dart';
+import '../../services/product_service.dart';
 import '../../widgets/product_card.dart';
 import 'product_details_screen.dart';
 
-class SearchResultsScreen
-    extends StatelessWidget {
-
+class SearchResultsScreen extends StatefulWidget {
   final String keyword;
 
   const SearchResultsScreen({
@@ -15,58 +14,71 @@ class SearchResultsScreen
   });
 
   @override
+  State<SearchResultsScreen> createState() => _SearchResultsScreenState();
+}
+
+class _SearchResultsScreenState extends State<SearchResultsScreen> {
+  final ProductService _productService = ProductService();
+  late Future<List<Product>> _searchResults;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchResults = _productService.searchProducts(widget.keyword);
+  }
+
+  @override
   Widget build(BuildContext context) {
-
-    final results =
-        DummyData.products
-            .where(
-              (product) =>
-                  product.name
-                      .toLowerCase()
-                      .contains(
-                        keyword
-                            .toLowerCase(),
-                      ),
-            )
-            .toList();
-
     return Scaffold(
       appBar: AppBar(
-        title:
-            const Text("Results"),
+        title: const Text("Results"),
       ),
+      body: FutureBuilder<List<Product>>(
+        future: _searchResults,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-      body: ListView.builder(
-        padding:
-            const EdgeInsets.all(20),
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
 
-        itemCount: results.length,
+          final results = snapshot.data ?? [];
 
-        itemBuilder:
-            (context, index) {
+          if (results.isEmpty) {
+            return Center(
+              child: Text('No results found for "${widget.keyword}"'),
+            );
+          }
 
-          final product =
-              results[index];
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final product = results[index];
 
-          return GestureDetector(
-            onTap: () {
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      ProductDetailsScreen(
-                    product:
-                        product,
-                  ),
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailsScreen(
+                        product: product,
+                      ),
+                    ),
+                  );
+                },
+                child: ProductCard(
+                  product: product,
+                  onAdd: () {},
                 ),
               );
             },
-
-            child: ProductCard(
-              product: product,
-              onAdd: () {},
-            ),
           );
         },
       ),

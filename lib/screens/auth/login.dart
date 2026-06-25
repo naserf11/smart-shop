@@ -244,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen>
                   const Text('Don\'t have an account? ',
                       style: TextStyle(color: Colors.black54)),
                   GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.register),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.emailAuth),
                     child: const Text('Sign up',
                         style: TextStyle(
                             color: AppColors.primary,
