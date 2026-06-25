@@ -46,11 +46,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── 1. Background ─────────────────────────────────────────────────
-          // TODO: Replace 'assets/images/welcome_bg.png' with a high-quality
-          // grocery/food photography image for the final release.
-          // Recommended resolution: 1080×1920px (portrait).
-          // For now, this uses a rich green gradient that matches brand identity.
+
           _GradientBackground(),
 
           // ── 2. Logo + brand section ───────────────────────────────────────
@@ -59,8 +55,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               children: [
                 // Brand block — upper 45% of screen
                 Expanded(flex: 45, child: _LogoSection()),
-
-                // Auth controls — lower 55% of screen
                 Expanded(flex: 55, child: _AuthSection()),
               ],
             ),
@@ -117,60 +111,63 @@ class _GradientBackground extends StatelessWidget {
 class _LogoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // TODO: Replace with your actual logo file.
-          // Recommended: an SVG or high-res PNG with a transparent background.
-          Image.asset(
-            'assets/images/basket.png',
-            width: 100,
-            height: 100,
-            // Tint white so it pops against the green background
-            color: Colors.white,
-            colorBlendMode: BlendMode.srcIn,
-            semanticLabel: 'Grocery Plus Logo',
-            errorBuilder: (_, __, ___) => Container(
-              width: 100,
-              height: 100,
+    return SingleChildScrollView(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+
+            const SizedBox(height: 20),
+
+            Container(
+              width: 160,
+              height: 160,
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.shopping_basket_outlined,
-                size: 52,
                 color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 25,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/basket.png',
+                  width: 144,
+                  height: 144,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
+            const SizedBox(height: 20),
 
-          const SizedBox(height: 20),
-
-          // App name — TODO: swap text for an SVG wordmark if available
-          const Text(
-            'GROCERY PLUS',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 3.5,
+            const Text(
+              'GROCERY PLUS',
+              style: TextStyle(
+                color: const Color(0xFF122E11),
+                fontSize: 42,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+              ),
             ),
-          ),
 
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-          const Text(
-            'Smart Shopping, Simplified',
-            style: TextStyle(
-              color: Color.fromARGB(179, 0, 0, 0),
-              fontSize: 14,
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w400,
+            const Text(
+              'Smart Shopping, Simplified',
+              style: TextStyle(
+                color: Colors.black54,
+                fontSize: 14,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w400,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -330,21 +327,27 @@ class _PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              AppColors.textPrimary, // Dark button — matches reference
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
         ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.3,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.phone_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -414,79 +417,8 @@ class _GoogleIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Four-color Google "G" rendered with RichText
-    return SizedBox(
-      width: 28,
-      height: 28,
-      child: CustomPaint(painter: _GooglePainter()),
-    );
+    return Image.asset('assets/images/google.png', width: 28, height: 28);
   }
-}
-
-class _GooglePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    // Background circle (optional, remove if you want just the G)
-    final bgPaint = Paint()..color = Colors.white;
-    canvas.drawCircle(center, radius, bgPaint);
-
-    // Draw colored arcs to approximate the Google logo
-    final strokeWidth = size.width * 0.16;
-
-    void drawArc(double startAngle, double sweepAngle, Color color) {
-      final paint = Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius * 0.72),
-        startAngle,
-        sweepAngle,
-        false,
-        paint,
-      );
-    }
-
-    const pi = 3.141592653589793;
-
-    // Blue (top-right)
-    drawArc(-pi / 4, pi / 2 + 0.1, const Color(0xFF4285F4));
-    // Red (top-left)
-    drawArc(pi * 3 / 4, pi / 2 + 0.1, const Color(0xFFEA4335));
-    // Yellow (bottom-left)
-    drawArc(pi * 5 / 4, pi / 2 + 0.1, const Color(0xFFFBBC05));
-    // Green (bottom-right)
-    drawArc(-pi * 3 / 4, pi / 2 + 0.1, const Color(0xFF34A853));
-
-    // White horizontal bar (the crossbar of the "G") — slightly thicker and rounded
-    final barPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth * 1.05
-      ..strokeCap = StrokeCap.round;
-    final barStart = Offset(center.dx - radius * 0.05, center.dy - 0.6);
-    final barEnd = Offset(center.dx + radius * 0.52, center.dy - 0.6);
-    canvas.drawLine(barStart, barEnd, barPaint);
-
-    // Blue fill for the right side of the G — rendered as a rounded stroke
-    final blueFill = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(center.dx + radius * 0.52, center.dy - 0.6),
-      Offset(center.dx + radius * 0.52, center.dy + radius * 0.38),
-      blueFill,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _FacebookIcon extends StatelessWidget {
@@ -494,24 +426,7 @@ class _FacebookIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1877F2),
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: const Text(
-        'f',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          height: 1.1,
-        ),
-      ),
-    );
+    return Image.asset('assets/images/facebook.png', width: 22, height: 22);
   }
 }
 
@@ -520,19 +435,11 @@ class _EmailIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Color(0xFFE6F4FF),
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.email_outlined,
-        size: 16,
-        color: AppColors.primary,
-      ),
+    return Image.asset(
+      'assets/images/email.png',
+      width: 32,
+      height: 32,
+      fit: BoxFit.contain,
     );
   }
 }

@@ -105,4 +105,19 @@ class AppRoutes {
     notifications: (_) => const NotificationsScreen(),
     more: (_) => const MoreScreen(),
   };
+
+  static void navigateWithoutAnimation(BuildContext context, String routeName) {
+    final builder = routes[routeName];
+    if (builder == null) return;
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            builder(context),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+  }
 }

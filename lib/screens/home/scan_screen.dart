@@ -24,6 +24,9 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   bool _isTorchOn = false;
   bool _isLoading = false;
   bool _hasPermission = false;
+  String? _lastScannedCode;
+  DateTime? _lastScanTime;
+  static const Duration _scanDebounceDuration = Duration(seconds: 2);
 
   @override
   void initState() {
@@ -45,32 +48,16 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     _controller.stop();
     switch (index) {
       case 0:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.home,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.home);
         break;
       case 1:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.cart,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.cart);
         break;
       case 3:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.notifications,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.more,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.more);
         break;
     }
   }
@@ -117,27 +104,41 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
 
   void _onDetect(BarcodeCapture capture) {
     if (_isLoading) return;
+    final now = DateTime.now();
+
     for (final barcode in capture.barcodes) {
-      print('RAW VALUE: ${barcode.rawValue}');
-      print('DISPLAY VALUE: ${barcode.displayValue}');
-      print('FORMAT: ${barcode.format}');
+      final raw = barcode.rawValue;
+      final display = barcode.displayValue;
+      debugPrint('RAW VALUE: $raw');
+      debugPrint('DISPLAY VALUE: $display');
+      debugPrint('FORMAT: ${barcode.format}');
 
-      String? code = barcode.displayValue ?? barcode.rawValue;
-
-      if (code == null || code.isEmpty) {
-        continue;
-      }
+      String? code = display ?? raw;
+      if (code == null || code.isEmpty) continue;
 
       if (code.startsWith(']C1')) {
         code = code.substring(3);
       }
 
-      debugPrint('RAW VALUE: ${barcode.rawValue}');
-      debugPrint('DISPLAY VALUE: ${barcode.displayValue}');
+      // Debounce: ignore repeated scans of the same code within the debounce window
+      if (_lastScannedCode != null &&
+          _lastScannedCode == code &&
+          _lastScanTime != null) {
+        final diff = now.difference(_lastScanTime!);
+        if (diff < _scanDebounceDuration) {
+          debugPrint(
+            'Ignored duplicate scan ($code) - ${diff.inMilliseconds}ms since last',
+          );
+          continue;
+        }
+      }
+
+      // Record this scan
+      _lastScannedCode = code;
+      _lastScanTime = now;
+
       debugPrint('SEARCHING BARCODE: $code');
-
       _lookupProduct(code);
-
       break;
     }
   }
@@ -159,12 +160,18 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       builder: (_) => _ProductResultSheet(
         product: product,
-        onAddToCart: () {
-          CartService().addToCart(product);
+        onAddToCart: (int quantity) {
+          for (int i = 0; i < quantity; i++) {
+            CartService().addToCart(product);
+          }
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Added to cart!'),
+            SnackBar(
+              content: Text(
+                quantity > 1
+                    ? 'Added $quantity items to cart!'
+                    : 'Added to cart!',
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -181,8 +188,8 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   void _resetScanner() {
     if (!mounted) return;
 
-    var _lastScannedCode = null;
-    var _lastScanTime = null;
+    _lastScannedCode = null;
+    _lastScanTime = null;
 
     try {
       _controller.start();
@@ -219,13 +226,7 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
+                  const SizedBox(width: 48),
                   const Text(
                     'Scan Product',
                     style: TextStyle(
@@ -287,9 +288,9 @@ class _PermissionDeniedView extends StatelessWidget {
   }
 }
 
-class _ProductResultSheet extends StatelessWidget {
+class _ProductResultSheet extends StatefulWidget {
   final Product product;
-  final VoidCallback onAddToCart;
+  final Function(int quantity) onAddToCart;
   final VoidCallback onDismiss;
 
   const _ProductResultSheet({
@@ -299,33 +300,275 @@ class _ProductResultSheet extends StatelessWidget {
   });
 
   @override
+  State<_ProductResultSheet> createState() => _ProductResultSheetState();
+}
+
+class _ProductResultSheetState extends State<_ProductResultSheet> {
+  int _quantity = 1;
+
+  @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.5,
+      initialChildSize: 0.7,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
       builder: (_, controller) => Container(
-        color: Colors.white,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         child: ListView(
           controller: controller,
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.zero,
           children: [
-            Text(
-              product.name,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'RM ${product.price.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+            // Header with close button
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Product Details',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: widget.onDismiss,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: onAddToCart,
-              child: const Text('Add to Cart'),
+            // Divider
+            const Divider(height: 1),
+            // Product Image
+            Container(
+              color: Colors.grey[100],
+              height: 220,
+              width: double.infinity,
+              child: Image.asset(
+                widget.product.image,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(
+                      Icons.image_not_supported,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
+              ),
             ),
-            OutlinedButton(onPressed: onDismiss, child: const Text('Cancel')),
+            // Product Info
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Name
+                  Text(
+                    widget.product.name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Rating
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        widget.product.rating.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: widget.product.stock > 0
+                              ? Colors.green[100]
+                              : Colors.red[100],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          widget.product.stock > 0
+                              ? '${widget.product.stock} in stock'
+                              : 'Out of stock',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: widget.product.stock > 0
+                                ? Colors.green[700]
+                                : Colors.red[700],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Price Section
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'RM ${widget.product.price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      if (widget.product.oldPrice > widget.product.price)
+                        Text(
+                          'RM ${widget.product.oldPrice.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            decoration: TextDecoration.lineThrough,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      const SizedBox(width: 8),
+                      if (widget.product.isDiscounted)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red[100],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'SALE',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red[700],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Description
+                  if (widget.product.description.isNotEmpty) ...[
+                    const Text(
+                      'Description',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.product.description,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Quantity Selector
+                  const Text(
+                    'Quantity',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          onPressed: _quantity > 1
+                              ? () => setState(() => _quantity--)
+                              : null,
+                          splashRadius: 20,
+                        ),
+                        Container(
+                          width: 50,
+                          alignment: Alignment.center,
+                          child: Text(
+                            _quantity.toString(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: _quantity < widget.product.stock
+                              ? () => setState(() => _quantity++)
+                              : null,
+                          splashRadius: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Action Buttons
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: widget.product.stock > 0
+                          ? () => widget.onAddToCart(_quantity)
+                          : null,
+                      child: const Text(
+                        'Add to Cart',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: widget.onDismiss,
+                      child: const Text(
+                        'Continue Scanning',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
           ],
         ),
       ),

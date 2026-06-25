@@ -6,31 +6,18 @@ class DummyData {
     Category(
       id: '1',
       name: 'Fruits & Vegetables',
-      image: 'assets/images/basket.png',
+image: 'assets/images/fruits_vegetables.png',
     ),
-    Category(
-      id: '2',
-      name: 'Breakfast',
-      image: 'assets/images/egg.png',
-    ),
-    Category(
-      id: '3',
-      name: 'Dairy Products',
-      image: 'assets/images/milk.png',
-    ),
-    Category(
-      id: '4',
-      name: 'Seafood',
-      image: 'assets/images/fish.png',
-    ),
+    Category(id: '2', name: 'Breakfast', image: 'assets/images/egg.png'),
+    Category(id: '3', name: 'Dairy Products', image: 'assets/images/milk.png'),
+    Category(id: '4', name: 'Seafood', image: 'assets/images/fish.png'),
   ];
 
   static List<Product> products = [
     Product(
       id: '1',
       name: 'Arla DANO Full Cream Milk Powder',
-      description:
-          'Premium full cream milk powder.',
+      description: 'Premium full cream milk powder.',
       categoryId: '3',
       image: 'assets/images/dano.png',
       price: 182,
@@ -42,8 +29,61 @@ class DummyData {
     Product(
       id: '2',
       name: 'Nestle Nido Milk Powder',
-      description:
-          'Nestle milk powder instant.',
+      description: 'Nestle milk powder instant.',
+      categoryId: '3',
+      image: 'assets/images/nido.png',
+      price: 270,
+      oldPrice: 342,
+      stock: 85,
+      rating: 4.8,
+      isDiscounted: true,
+    ),
+  ];
+
+  static List<Product> offers = [
+    Product(
+      id: '3',
+      name: 'Arla DANO Full Cream Milk Powder',
+      description: 'Premium full cream milk powder.',
+      categoryId: '3',
+      image: 'assets/images/dano.png',
+      price: 182,
+      oldPrice: 200,
+      stock: 100,
+      rating: 4.7,
+      isDiscounted: true,
+    ),
+    Product(
+      id: '4',
+      name: 'Nestle Nido Milk Powder',
+      description: 'Nestle milk powder instant.',
+      categoryId: '3',
+      image: 'assets/images/nido.png',
+      price: 270,
+      oldPrice: 342,
+      stock: 85,
+      rating: 4.8,
+      isDiscounted: true,
+    ),
+  ];
+
+  static List<Product> bestSellers = [
+    Product(
+      id: '5',
+      name: 'Arla DANO Full Cream Milk Powder',
+      description: 'Premium full cream milk powder.',
+      categoryId: '3',
+      image: 'assets/images/dano.png',
+      price: 182,
+      oldPrice: 200,
+      stock: 100,
+      rating: 4.7,
+      isDiscounted: true,
+    ),
+    Product(
+      id: '6',
+      name: 'Nestle Nido Milk Powder',
+      description: 'Nestle milk powder instant.',
       categoryId: '3',
       image: 'assets/images/nido.png',
       price: 270,

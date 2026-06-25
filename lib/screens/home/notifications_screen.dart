@@ -18,34 +18,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     switch (index) {
       case 0:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.home,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.home);
         break;
       case 1:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.cart,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.cart);
         break;
       case 2:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.scan,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.scan);
         break;
       case 3:
         break;
       case 4:
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.more,
-          (route) => false,
-        );
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.more);
         break;
     }
   }
