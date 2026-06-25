@@ -5,7 +5,10 @@ import '../../widgets/search_bar_widget.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/bottom_nav_bar.dart';
 
-import '../../data/dummy_data.dart';
+import '../../models/category.dart';
+import '../../models/product.dart';
+import '../../services/category_service.dart';
+import '../../services/product_service.dart';
 import '../../services/product_service_test.dart';
 import '../products/category_products_screen.dart';
 
@@ -21,10 +24,22 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   int currentIndex = 0;
 
+  final ProductService _productService = ProductService();
+  final CategoryService _categoryService = CategoryService();
+
+  late Future<List<Category>> _categoriesFuture;
+  late Future<List<Product>> _offersFuture;
+  late Future<List<Product>> _bestSellersFuture;
+
   @override
   void initState() {
     super.initState();
     ProductServiceTest().testConnection();
+    
+    // Initialize futures
+    _categoriesFuture = _categoryService.getCategories();
+    _offersFuture = _productService.getOffers();
+    _bestSellersFuture = _productService.getBestSellers();
   }
 
   @override
@@ -96,58 +111,100 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 15),
-              SizedBox(
-                height: 180,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: DummyData.offers.length,
-                  itemBuilder: (context, index) {
-                    final offer = DummyData.offers[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: Container(
-                        width: 160,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.grey.shade100,
-                        ),
-                        child: Stack(
-                          children: [
-                            Center(
-                              child: Image.asset(
-                                offer.image,
-                                fit: BoxFit.contain,
-                                height: 120,
-                              ),
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  '${(((offer.oldPrice! - offer.price) / offer.oldPrice!) * 100).toStringAsFixed(0)}%',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+              FutureBuilder<List<Product>>(
+                future: _offersFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox(
+                      height: 180,
+                      child: Center(
+                        child: CircularProgressIndicator(),
                       ),
                     );
-                  },
-                ),
+                  }
+
+                  if (snapshot.hasError) {
+                    return SizedBox(
+                      height: 180,
+                      child: Center(
+                        child: Text('Error loading offers'),
+                      ),
+                    );
+                  }
+
+                  final offers = snapshot.data ?? [];
+
+                  if (offers.isEmpty) {
+                    return SizedBox(
+                      height: 180,
+                      child: Center(
+                        child: Text('No offers available'),
+                      ),
+                    );
+                  }
+
+                  return SizedBox(
+                    height: 180,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: offers.length,
+                      itemBuilder: (context, index) {
+                        final offer = offers[index];
+                        final discountPercentage =
+                            offer.oldPrice > 0
+                                ? (((offer.oldPrice - offer.price) / offer.oldPrice) * 100)
+                                    .toStringAsFixed(0)
+                                : '0';
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Container(
+                            width: 160,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.grey.shade100,
+                            ),
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Image.asset(
+                                    offer.image,
+                                    fit: BoxFit.contain,
+                                    height: 120,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(Icons.image_not_supported);
+                                    },
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '$discountPercentage%',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 25),
               // Categories Section
@@ -156,33 +213,67 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 15),
-              SizedBox(
-                height: 180,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: DummyData.categories.length,
-                  itemBuilder: (context, index) {
-                    final category = DummyData.categories[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: CategoryCard(
-                        image: category.image,
-                        title: category.name,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CategoryProductsScreen(
-                                categoryId: category.id,
-                                categoryName: category.name,
-                              ),
-                            ),
-                          );
-                        },
+              FutureBuilder<List<Category>>(
+                future: _categoriesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox(
+                      height: 180,
+                      child: Center(
+                        child: CircularProgressIndicator(),
                       ),
                     );
-                  },
-                ),
+                  }
+
+                  if (snapshot.hasError) {
+                    return SizedBox(
+                      height: 180,
+                      child: Center(
+                        child: Text('Error loading categories'),
+                      ),
+                    );
+                  }
+
+                  final categories = snapshot.data ?? [];
+
+                  if (categories.isEmpty) {
+                    return SizedBox(
+                      height: 180,
+                      child: Center(
+                        child: Text('No categories available'),
+                      ),
+                    );
+                  }
+
+                  return SizedBox(
+                    height: 180,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final category = categories[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: CategoryCard(
+                            image: category.image,
+                            title: category.name,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CategoryProductsScreen(
+                                    categoryId: category.id,
+                                    categoryName: category.name,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 25),
               // Best Sellers Section
@@ -191,92 +282,129 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 15),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: DummyData.bestSellers.length,
-                itemBuilder: (context, index) {
-                  final product = DummyData.bestSellers[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            spreadRadius: 1,
-                            blurRadius: 4,
-                          ),
-                        ],
+              FutureBuilder<List<Product>>(
+                future: _bestSellersFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        child: CircularProgressIndicator(),
                       ),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                color: Colors.grey.shade100,
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        child: Text('Error loading best sellers'),
+                      ),
+                    );
+                  }
+
+                  final bestSellers = snapshot.data ?? [];
+
+                  if (bestSellers.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        child: Text('No best sellers available'),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: bestSellers.length,
+                    itemBuilder: (context, index) {
+                      final product = bestSellers[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                spreadRadius: 1,
+                                blurRadius: 4,
                               ),
-                              child: Image.asset(
-                                product.image,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
+                            ],
                           ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product.name,
-                                  maxLines: 2,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Colors.grey.shade100,
+                                  ),
+                                  child: Image.asset(
+                                    product.image,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(Icons.image_not_supported);
+                                    },
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Row(
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '₦${product.price}',
+                                      product.name,
+                                      maxLines: 2,
                                       style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w600,
                                         fontSize: 14,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    if (product.oldPrice != null)
-                                      Text(
-                                        '₦${product.oldPrice}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                          decoration:
-                                              TextDecoration.lineThrough,
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '₦${product.price}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(width: 8),
+                                        if (product.oldPrice > 0)
+                                          Text(
+                                            '₦${product.oldPrice}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                              decoration:
+                                                  TextDecoration.lineThrough,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Icon(
+                                  Icons.add_circle,
+                                  color: Colors.green.shade600,
+                                  size: 28,
+                                ),
+                              ),
+                            ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Icon(
-                              Icons.add_circle,
-                              color: Colors.green.shade600,
-                              size: 28,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
