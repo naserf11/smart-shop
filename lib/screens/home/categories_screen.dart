@@ -1,11 +1,26 @@
 import 'package:flutter/material.dart';
 
-import '../../data/dummy_data.dart';
 import '../../widgets/category_card.dart';
+import '../../services/category_service.dart';
+import '../../models/category.dart';
 import '../../core/app_routes.dart';
 
-class CategoriesScreen extends StatelessWidget {
+class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
+
+  @override
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
+}
+
+class _CategoriesScreenState extends State<CategoriesScreen> {
+  final CategoryService _categoryService = CategoryService();
+  late Future<List<Category>> _categoriesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _categoriesFuture = _categoryService.getCategories();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,21 +44,40 @@ class CategoriesScreen extends StatelessWidget {
           },
         ),
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: DummyData.categories.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemBuilder: (context, index) {
-          final category = DummyData.categories[index];
+      body: FutureBuilder<List<Category>>(
+        future: _categoriesFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-          return CategoryCard(
-            image: category.image,
-            title: category.name,
-            onTap: () {},
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final categories = snapshot.data ?? [];
+
+          if (categories.isEmpty) {
+            return const Center(child: Text('No categories available'));
+          }
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: categories.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemBuilder: (context, index) {
+              final category = categories[index];
+
+              return CategoryCard(
+                image: category.image,
+                title: category.name,
+                onTap: () {},
+              );
+            },
           );
         },
       ),

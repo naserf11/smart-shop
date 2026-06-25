@@ -206,7 +206,7 @@ class _AuthSection extends StatelessWidget {
                 onPressed: () => Navigator.pushNamed(
                   context,
                   // Leads to PhoneLoginScreen → OTP → Register → CreatePassword
-                  AppRoutes.login,
+                  AppRoutes.phoneLogin,
                 ),
               ),
 
@@ -239,8 +239,11 @@ class _AuthSection extends StatelessWidget {
               _SocialButton(
                 iconWidget: const _EmailIcon(),
                 label: 'Continue with Email',
-                onPressed: () =>
-                    Navigator.pushNamed(context, AppRoutes.emailAuth),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  AppRoutes.emailAuth,
+                  arguments: {'isSignUp': true}, // open in Create Account mode
+                ),
               ),
 
               const SizedBox(height: 28),
@@ -257,7 +260,11 @@ class _AuthSection extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.login),
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.emailAuth,
+                      arguments: {'isSignUp': false}, // open in Login mode
+                    ),
                     child: const Text(
                       'Log In',
                       style: TextStyle(
