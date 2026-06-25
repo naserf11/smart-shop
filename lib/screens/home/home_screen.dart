@@ -78,8 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
         AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-        AppRoutes.navigateWithoutAnimation(context, AppRoutes.more);
-        break;
+  AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
+  break;
     }
   }
 
@@ -166,14 +166,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Stack(
                               children: [
                                 Center(
-                                  child: Image.asset(
-                                    offer.image,
-                                    fit: BoxFit.contain,
-                                    height: 120,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.image_not_supported);
-                                    },
-                                  ),
+                                  child: offer.image.isNotEmpty
+    ? Image.asset(
+        offer.image,
+        fit: BoxFit.contain,
+        height: 120,
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.image_not_supported),
+      )
+    : const Icon(Icons.image_not_supported),
                                 ),
                                 Positioned(
                                   top: 8,
@@ -345,13 +346,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                     color: Colors.grey.shade100,
                                   ),
-                                  child: Image.asset(
-                                    product.image,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.image_not_supported);
-                                    },
-                                  ),
+                                  child: product.image.isNotEmpty
+    ? Image.asset(
+        product.image,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.image_not_supported),
+      )
+    : const Icon(Icons.image_not_supported),
                                 ),
                               ),
                               Expanded(
