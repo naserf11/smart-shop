@@ -83,6 +83,7 @@ class OrderService {
             'order_status': 'pending',
             'total_amount': cart.totalAmount,
             'address_id': addressId,
+            'payment_method': paymentMethod,
           })
           .select('order_id')
           .single();
@@ -93,11 +94,13 @@ class OrderService {
         // 4. Insert order items
         final orderItems = cart.items
             .map(
-              (item) => {
-                'order_id': orderId,
-                'product_id': item.product.id,
-                'quantity': item.quantity,
-                'line_total': item.totalPrice,
+              (item) {
+                return {
+                  'order_id': orderId,
+                  'product_id': item.product.id,
+                  'quantity': item.quantity,
+                  'line_total': item.totalPrice,
+                };
               },
             )
             .toList();
@@ -108,8 +111,9 @@ class OrderService {
 
         print('✅ Order $orderId ($orderNum) created successfully in Supabase');
       }
-    } catch (e) {
-      print('⚠️ Supabase order creation failed, falling back to local simulation: $e');
+    } catch (e, st) {
+      print('⚠️ Supabase order creation failed: $e');
+      print('Stack trace: $st');
       // If Supabase failed, we generate a mock ID
       orderId = null;
     }
@@ -201,19 +205,21 @@ class OrderService {
       if (localOrder != null) {
         return localOrder.items
             .map(
-              (item) => {
-                'order_item_id': 'local-item-${item.product.id}',
-                'order_id': orderId,
-                'product_id': item.product.id,
-                'quantity': item.quantity,
-                'line_total': item.totalPrice,
-                'products': {
-                  'id': item.product.id,
-                  'name': item.product.name,
-                  'price': item.product.price,
-                  'image_url': item.product.image,
-                  'description': item.product.description,
-                }
+              (item) {
+                return {
+                  'order_item_id': 'local-item-${item.product.id}',
+                  'order_id': orderId,
+                  'product_id': item.product.id,
+                  'quantity': item.quantity,
+                  'line_total': item.totalPrice,
+                  'products': {
+                    'id': item.product.id,
+                    'name': item.product.name,
+                    'price': item.product.price,
+                    'image_url': item.product.image,
+                    'description': item.product.description,
+                  },
+                };
               },
             )
             .toList();
@@ -236,19 +242,21 @@ class OrderService {
       if (localOrder != null) {
         return localOrder.items
             .map(
-              (item) => {
-                'order_item_id': 'local-item-${item.product.id}',
-                'order_id': orderId,
-                'product_id': item.product.id,
-                'quantity': item.quantity,
-                'line_total': item.totalPrice,
-                'products': {
-                  'id': item.product.id,
-                  'name': item.product.name,
-                  'price': item.product.price,
-                  'image_url': item.product.image,
-                  'description': item.product.description,
-                }
+              (item) {
+                return {
+                  'order_item_id': 'local-item-${item.product.id}',
+                  'order_id': orderId,
+                  'product_id': item.product.id,
+                  'quantity': item.quantity,
+                  'line_total': item.totalPrice,
+                  'products': {
+                    'id': item.product.id,
+                    'name': item.product.name,
+                    'price': item.product.price,
+                    'image_url': item.product.image,
+                    'description': item.product.description,
+                  },
+                };
               },
             )
             .toList();

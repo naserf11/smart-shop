@@ -5,6 +5,7 @@ import '../../core/app_routes.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
+import '../orders/orders_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -666,7 +667,12 @@ _buildMenuCard(
   title: "Orders",
   subtitle: "View your previous orders",
   onTap: () {
-    // TODO: Navigate to Orders Screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const OrdersScreen(),
+      ),
+    );
   },
 ),
 
