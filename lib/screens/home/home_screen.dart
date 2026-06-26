@@ -9,8 +9,10 @@ import '../../models/category.dart';
 import '../../models/product.dart';
 import '../../services/category_service.dart';
 import '../../services/product_service.dart';
+import '../../services/cart_service.dart';
 import '../../services/product_service_test.dart';
 import '../products/category_products_screen.dart';
+import '../products/product_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -155,7 +157,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? (((offer.oldPrice - offer.price) / offer.oldPrice) * 100)
                                     .toStringAsFixed(0)
                                 : '0';
-                        return Padding(
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProductDetailsScreen(
+                                  product: offer,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Padding(
                           padding: const EdgeInsets.only(right: 12),
                           child: Container(
                             width: 160,
@@ -201,6 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
+                        ),
                         );
                       },
                     ),
@@ -394,12 +408,28 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Icon(
-                                  Icons.add_circle,
-                                  color: Colors.green.shade600,
-                                  size: 28,
+                              GestureDetector(
+                                onTap: () {
+                                  CartService().addToCart(product);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('${product.name} added to cart'),
+                                      backgroundColor: Colors.green.shade600,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Icon(
+                                    Icons.add_circle,
+                                    color: Colors.green.shade600,
+                                    size: 28,
+                                  ),
                                 ),
                               ),
                             ],
