@@ -33,11 +33,15 @@ class CategoryCard extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: Image.asset(
-                image,
-                fit: BoxFit.contain,
-              ),
-            ),
+  child: image.isNotEmpty
+      ? Image.asset(
+          image,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.image_not_supported),
+        )
+      : const Icon(Icons.image_not_supported),
+),
             const SizedBox(height: 8),
             Text(
               title,

@@ -22,7 +22,7 @@ class GroceryPlusApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Grocery Plus',
+      title: 'Smart Shop',
       theme: AppTheme.lightTheme,
       initialRoute: AppRoutes.welcome,
       routes: AppRoutes.routes,

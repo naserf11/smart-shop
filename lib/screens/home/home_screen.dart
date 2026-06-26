@@ -78,8 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
         AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-        AppRoutes.navigateWithoutAnimation(context, AppRoutes.more);
-        break;
+  AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
+  break;
     }
   }
 
@@ -166,14 +166,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Stack(
                               children: [
                                 Center(
-                                  child: Image.asset(
-                                    offer.image,
-                                    fit: BoxFit.contain,
-                                    height: 120,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.image_not_supported);
-                                    },
-                                  ),
+                                  child: offer.image.isNotEmpty
+    ? Image.asset(
+        offer.image,
+        fit: BoxFit.contain,
+        height: 120,
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.image_not_supported),
+      )
+    : const Icon(Icons.image_not_supported),
                                 ),
                                 Positioned(
                                   top: 8,
@@ -345,13 +346,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                     color: Colors.grey.shade100,
                                   ),
-                                  child: Image.asset(
-                                    product.image,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.image_not_supported);
-                                    },
-                                  ),
+                                  child: product.image.isNotEmpty
+    ? Image.asset(
+        product.image,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.image_not_supported),
+      )
+    : const Icon(Icons.image_not_supported),
                                 ),
                               ),
                               Expanded(
@@ -370,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Row(
                                       children: [
                                         Text(
-                                          '₦${product.price}',
+                                          'RM ${product.price}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
@@ -379,7 +381,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         const SizedBox(width: 8),
                                         if (product.oldPrice > 0)
                                           Text(
-                                            '₦${product.oldPrice}',
+                                            'RM ${product.oldPrice}',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey.shade600,

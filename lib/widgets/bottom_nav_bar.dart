@@ -73,8 +73,12 @@ class BottomNavBar extends StatelessWidget {
           ),
 
           Expanded(
-            child: _buildItem(icon: Icons.menu, label: "More", index: 4),
-          ),
+  child: _buildItem(
+    icon: Icons.person,
+    label: "Profile",
+    index: 4,
+  ),
+),
         ],
       ),
     );

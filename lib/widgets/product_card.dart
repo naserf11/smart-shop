@@ -31,10 +31,23 @@ class ProductCard extends StatelessWidget {
             width: 70,
             height: 70,
             color: Colors.grey.shade100,
-            child: Image.asset(
-              product.image,
-              fit: BoxFit.contain,
-            ),
+            child: product.image.isNotEmpty
+    ? Image.asset(
+        product.image,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(
+            Icons.image_not_supported,
+            size: 40,
+            color: Colors.grey,
+          );
+        },
+      )
+    : const Icon(
+        Icons.image_not_supported,
+        size: 40,
+        color: Colors.grey,
+      ),
           ),
           const SizedBox(width: 12),
           Expanded(

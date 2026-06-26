@@ -32,7 +32,8 @@ class _MoreScreenState extends State<MoreScreen> {
         AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-        break;
+  AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
+  break;
     }
   }
 
@@ -162,7 +163,9 @@ class _MoreScreenState extends State<MoreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("More"), elevation: 0.5),
+      appBar: AppBar(
+          automaticallyImplyLeading: false,
+        title: const Text("More"), elevation: 0.5),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onBottomNavTap,
@@ -223,15 +226,6 @@ class _MoreScreenState extends State<MoreScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Main Menu Items
-          _buildMenuCard(
-            icon: Icons.person_outline,
-            title: "Profile",
-            subtitle: "View and edit your profile",
-            onTap: () {
-              Navigator.pushNamed(context, AppRoutes.profile);
-            },
-          ),
           _buildMenuCard(
             icon: Icons.receipt_long_outlined,
             title: "Orders",

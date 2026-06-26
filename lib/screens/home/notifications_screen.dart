@@ -29,8 +29,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 3:
         break;
       case 4:
-        AppRoutes.navigateWithoutAnimation(context, AppRoutes.more);
-        break;
+    AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
+    break;
     }
   }
 

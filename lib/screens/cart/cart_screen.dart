@@ -33,8 +33,8 @@ class _CartScreenState extends State<CartScreen> {
         AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-        AppRoutes.navigateWithoutAnimation(context, AppRoutes.more);
-        break;
+    AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
+    break;
     }
   }
 
