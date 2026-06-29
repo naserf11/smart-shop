@@ -5,6 +5,7 @@ import '../../core/app_routes.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
+import '../orders/orders_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,11 +17,15 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<Map<String, dynamic>> _userDataFuture;
 
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
     _userDataFuture = _fetchUserData();
   }
+
+  // ── Navigation ───────────────────────────────────────────────────────────
 
   void _onBottomNavTap(int index) {
     switch (index) {
@@ -41,28 +46,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // ── Data Fetching ────────────────────────────────────────────────────────
+
   Future<Map<String, dynamic>> _fetchUserData() async {
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        return {'error': 'No user logged in'};
-      }
-      // Fetch user profile from database
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .single();
+      if (user == null) return {'error': 'No user logged in'};
 
+      final response = await Supabase.instance.client
+          .from('customers')
+          .select()
+          .eq('firebase_uid', user.id)
+          .maybeSingle();
+
+      if (response != null) {
+        return {
+          'fullName': response['full_name'] ?? user.email ?? 'User',
+          'email': response['email'] ?? user.email ?? 'No email',
+          'phoneNumber': response['phone_number'] ?? user.phone ?? '',
+          'imageUrl': response['profile_image_url'] ?? '',
+          'error': null,
+        };
+      }
+
+      // No customer row yet — fall back to auth metadata
       return {
-        'fullName': response['full_name'] ?? user.email ?? 'User',
+        'fullName':
+            user.userMetadata?['full_name'] ??
+            user.email?.split('@')[0] ??
+            'User',
         'email': user.email ?? 'No email',
-        'phoneNumber': response['phone'] ?? user.phone ?? '',
-        'imageUrl': response['avatar_url'] ?? '',
+        'phoneNumber': user.phone ?? '',
+        'imageUrl': '',
         'error': null,
       };
-    } catch (e) {
-      // Fallback: use data from Supabase Auth
+    } catch (_) {
       final user = Supabase.instance.client.auth.currentUser;
       return {
         'fullName':
@@ -77,34 +95,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // ── Log Out ──────────────────────────────────────────────────────────────
+
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Log Out',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text('Are you sure you want to sign out of your account?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    await Supabase.instance.client.auth.signOut();
+
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.welcome,
+        (route) => false,
+      );
+    }
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-  backgroundColor: const Color(0xFFF5F7FA),
-
-  bottomNavigationBar: BottomNavBar(
-    currentIndex: 4,
-    onTap: _onBottomNavTap,
-  ),
-
-  appBar: AppBar(
-    automaticallyImplyLeading: false,
-  centerTitle: true,
-  title: const Text(
-    "Profile",
-    style: TextStyle(
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-    elevation: 0,
-    backgroundColor: const Color(0xFFF5F7FA),
-    surfaceTintColor: Colors.transparent,
-  ),
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        title: const Text(
+          'Profile',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        elevation: 0,
+        backgroundColor: const Color(0xFFF5F7FA),
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: 4,
+        onTap: _onBottomNavTap,
+      ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _userDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF2E7D32)),
+            );
           }
 
           if (snapshot.hasError) {
@@ -116,677 +179,714 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final imageUrl = userData['imageUrl'] as String? ?? '';
 
           return SingleChildScrollView(
-  padding: const EdgeInsets.all(AppSizes.screenPadding),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-                // Profile Header Card
-                // ================= HEADER =================
-Container(
-  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(24),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 12,
-        offset: const Offset(0, 5),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header ──────────────────────────────────────────────
+                _buildHeaderCard(context, fullName, imageUrl),
+                const SizedBox(height: 16),
+
+                // ── Membership ──────────────────────────────────────────
+                _buildMembershipCard(),
+                const SizedBox(height: 16),
+
+                // ── Loyalty Points ──────────────────────────────────────
+                _buildLoyaltyCard(),
+                const SizedBox(height: 24),
+
+                // ── Special Offers ──────────────────────────────────────
+                _sectionTitle('Special Offers'),
+                const SizedBox(height: 12),
+                _buildSpecialOffers(),
+                const SizedBox(height: 24),
+
+                // ── Profile Settings ─────────────────────────────────────
+                _sectionTitle('Profile Settings'),
+                const SizedBox(height: 12),
+                _buildProfileSettings(context),
+                const SizedBox(height: 16),
+
+                // ── Log Out ──────────────────────────────────────────────
+                _buildLogOutButton(),
+              ],
+            ),
+          );
+        },
       ),
-    ],
-  ),
-  child: Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primary,
-                width: 2,
-              ),
+    );
+  }
+
+  // ── Section Title ─────────────────────────────────────────────────────────
+
+  Widget _sectionTitle(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF181725),
+      ),
+    );
+  }
+
+  // ── Header Card ───────────────────────────────────────────────────────────
+
+  Widget _buildHeaderCard(
+    BuildContext context,
+    String fullName,
+    String imageUrl,
+  ) {
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+        );
+        if (mounted) {
+          setState(() => _userDataFuture = _fetchUserData());
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            child: CircleAvatar(
-              radius: 48,
-              backgroundColor: Colors.grey.shade100,
-              backgroundImage: imageUrl.isNotEmpty
-                  ? NetworkImage(imageUrl)
-                  : const AssetImage(
-                          'assets/images/user.png',
-                        )
-                        as ImageProvider,
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Container(
-              width: 34,
-              height: 34,
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Avatar with green border
+            Container(
               decoration: BoxDecoration(
-                color: AppColors.primary,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2,
-                ),
+                border: Border.all(color: const Color(0xFF2E7D32), width: 2.5),
               ),
-              child: const Icon(
-                Icons.camera_alt,
-                color: Colors.white,
-                size: 18,
+              child: CircleAvatar(
+                radius: 36,
+                backgroundColor: Colors.grey.shade100,
+                backgroundImage: imageUrl.isNotEmpty
+                    ? NetworkImage(imageUrl)
+                    : const AssetImage('assets/images/user.png') as ImageProvider,
               ),
             ),
+
+            const SizedBox(width: 16),
+
+            // Name + description
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Welcome,',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    fullName.isNotEmpty ? fullName : 'User',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E7D32),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Manage your account\nand preferences',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // Arrow
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.grey.shade400,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Membership Card ───────────────────────────────────────────────────────
+
+  Widget _buildMembershipCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF388E3C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.3),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-
-      const SizedBox(width: 18),
-
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Welcome,",
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey,
-                  ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Badge icon
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: BoxShape.circle,
             ),
+            child: const Icon(
+              Icons.workspace_premium,
+              color: Colors.amber,
+              size: 30,
+            ),
+          ),
 
-            const SizedBox(height: 6),
+          const SizedBox(width: 16),
 
-            Row(
+          // Membership info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    fullName,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineMedium
-                        ?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
+                const Text(
+                  'Membership Level',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Gold Member',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
                   ),
                 ),
-                const SizedBox(width: 6),
-                const Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                  size: 28,
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Active Member',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
+          ),
 
-            const SizedBox(height: 8),
-
-            Text(
-              "Manage your account\nand preferences",
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade700,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    ],
-  ),
-),
-
-const SizedBox(height: 20),
-           Container(
-  width: double.infinity,
-  padding: const EdgeInsets.all(20),
-  decoration: BoxDecoration(
-    gradient: const LinearGradient(
-      colors: [
-        Color(0xFF2E7D32),
-        Color(0xFF66BB6A),
-      ],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    ),
-    borderRadius: BorderRadius.circular(24),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.green.withOpacity(0.25),
-        blurRadius: 18,
-        offset: const Offset(0, 8),
-      ),
-    ],
-  ),
-  child: Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.workspace_premium,
-          color: Colors.amber,
-          size: 34,
-        ),
-      ),
-
-      const SizedBox(width: 16),
-
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Membership Level",
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 13,
+          // Member ID + QR
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Text(
+                'Member ID',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
-            ),
-
-            const SizedBox(height: 4),
-
-            const Text(
-              "Gold Member",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(.18),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Text(
-                "Active Member",
+              const SizedBox(height: 4),
+              const Text(
+                '#GP10258',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          const Text(
-            "Member ID",
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          const Text(
-            "#GP10258",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.qr_code_2,
-              color: Color(0xFF2E7D32),
-            ),
-          ),
-        ],
-      ),
-    ],
-  ),
-),
-
-const SizedBox(height: 20),
-Container(
-  width: double.infinity,
-  padding: const EdgeInsets.all(20),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(24),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 12,
-        offset: const Offset(0, 5),
-      ),
-    ],
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Row(
-        children: [
-          Icon(
-            Icons.stars_rounded,
-            color: Colors.orange,
-            size: 28,
-          ),
-          SizedBox(width: 10),
-          Text(
-            "Loyalty Points",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-
-      const SizedBox(height: 18),
-
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                "12,350",
-                style: TextStyle(
-                  fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2E7D32),
+                  fontSize: 14,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 16),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.qr_code_2,
+                  color: Color(0xFF2E7D32),
+                  size: 26,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Loyalty Points Card ───────────────────────────────────────────────────
+
+  Widget _buildLoyaltyCard() {
+    // TODO: Replace these with real data fetched from Supabase loyalty_points table
+    const double currentPoints = 12350;
+    const double nextTierTarget = 17000;
+    final double progress = currentPoints / nextTierTarget; // 0.726...
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          const Row(
+            children: [
+              Icon(Icons.star_rounded, color: Colors.orange, size: 26),
+              SizedBox(width: 8),
               Text(
-                "Available Points",
+                'Loyalty Points',
                 style: TextStyle(
-                  color: Colors.grey,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF181725),
                 ),
               ),
             ],
           ),
 
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 10,
+          const SizedBox(height: 16),
+
+          // Points + Tier
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Points number
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '12,350',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2E7D32),
+                      ),
+                    ),
+                    Text(
+                      'Available Points',
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Current Tier badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Column(
+                  children: [
+                    Text(
+                      'Gold',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2E7D32),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Current Tier',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 18),
+
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 10,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
             ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Progress labels
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '72% to Platinum',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              ),
+              const Text(
+                '4,650 pts left',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2E7D32),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Special Offers ────────────────────────────────────────────────────────
+
+  Widget _buildSpecialOffers() {
+    return Row(
+      children: [
+        // Left — green offer
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32).withOpacity(.1),
+              color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Column(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Gold",
+                const Icon(
+                  Icons.local_offer_rounded,
+                  color: Color(0xFF2E7D32),
+                  size: 28,
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '20% OFF',
                   style: TextStyle(
-                    color: Color(0xFF2E7D32),
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E7D32),
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  "Current Tier",
+                const SizedBox(height: 4),
+                const Text(
+                  'Fresh Fruits',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF181725),
                   ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Valid until 30 June',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
               ],
             ),
           ),
-        ],
+        ),
+
+        const SizedBox(width: 12),
+
+        // Right — amber offer
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.redeem_rounded, color: Colors.orange, size: 28),
+                const SizedBox(height: 10),
+                const Text(
+                  'SPECIAL\nDISCOUNT',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'On All Orders',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF181725),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'For orders above RM 80',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Profile Settings ──────────────────────────────────────────────────────
+
+  Widget _buildProfileSettings(BuildContext context) {
+    final items = <_SettingItem>[
+      _SettingItem(
+        icon: Icons.person_outline_rounded,
+        title: 'Personal Information',
+        subtitle: 'Edit your profile information',
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+          );
+          if (mounted) {
+            setState(() => _userDataFuture = _fetchUserData());
+          }
+        },
       ),
+      _SettingItem(
+        icon: Icons.lock_outline_rounded,
+        title: 'Change Password',
+        subtitle: 'Update your security password',
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+        ),
+      ),
+      _SettingItem(
+        icon: Icons.receipt_long_outlined,
+        title: 'My Orders',
+        subtitle: 'Track and view your orders',
+        onTap: () => Navigator.pushNamed(context, AppRoutes.orders),
+      ),
+      _SettingItem(
+        icon: Icons.notifications_outlined,
+        title: 'Notifications',
+        subtitle: 'Manage your notification settings',
+        onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
+      ),
+    ];
 
-      const SizedBox(height: 20),
-
-      ClipRRect(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        child: LinearProgressIndicator(
-          value: 0.72,
-          minHeight: 10,
-          backgroundColor: Colors.grey.shade300,
-          valueColor: const AlwaysStoppedAnimation(
-            Color(0xFF2E7D32),
-          ),
-        ),
-      ),
-
-      const SizedBox(height: 10),
-
-      const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            "72% to Platinum",
-            style: TextStyle(
-              color: Colors.grey,
-            ),
-          ),
-          Text(
-            "4,650 pts left",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2E7D32),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-    ],
-  ),
-),
-
-const SizedBox(height: 20),
-const Text(
-  "Exclusive Offers",
-  style: TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-    color: Colors.black87,
-  ),
-),
-
-const SizedBox(height: 16),
-
-Row(
-  children: [
-    Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE8F5E9),
-          borderRadius: BorderRadius.circular(20),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => Divider(
+          height: 1,
+          thickness: 1,
+          color: Colors.grey.shade100,
+          indent: 78,
+          endIndent: 16,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(
-              Icons.local_offer,
-              color: Color(0xFF2E7D32),
-              size: 34,
-            ),
+        itemBuilder: (_, index) {
+          final item = items[index];
+          final isFirst = index == 0;
+          final isLast = index == items.length - 1;
 
-            const SizedBox(height: 14),
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: item.onTap,
+              borderRadius: BorderRadius.vertical(
+                top: isFirst ? const Radius.circular(20) : Radius.zero,
+                bottom: isLast ? const Radius.circular(20) : Radius.zero,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    // Icon box
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        item.icon,
+                        color: const Color(0xFF2E7D32),
+                        size: 22,
+                      ),
+                    ),
 
-            const Text(
-              "20% OFF",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: Color(0xFF2E7D32),
+                    const SizedBox(width: 16),
+
+                    // Title + subtitle
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: Color(0xFF181725),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Arrow
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: Colors.grey.shade400,
+                    ),
+                  ],
+                ),
               ),
             ),
-
-            const SizedBox(height: 6),
-
-            const Text(
-              "Fresh Fruits",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              "Valid until 30 June",
-              style: TextStyle(
-                color: Colors.grey.shade700,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-
-    const SizedBox(width: 16),
-
-    Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFF8E1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(
-              Icons.card_giftcard,
-              color: Colors.orange,
-              size: 34,
-            ),
-
-            const SizedBox(height: 14),
-
-            const Text(
-              "FREE",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: Colors.orange,
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            const Text(
-              "Delivery",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              "For orders above RM 80",
-              style: TextStyle(
-                color: Colors.grey.shade700,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  ],
-),
-
-const SizedBox(height: 24),
-
-const Text(
-  "Profile Settings",
-  style: TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-    color: Colors.black87,
-  ),
-),
-
-const SizedBox(height: 16),
-
-_buildMenuCard(
-  context: context,
-  icon: Icons.person_outline,
-  title: "Personal Information",
-  subtitle: "Edit your profile information",
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const EditProfileScreen(),
-      ),
-    );
-  },
-),
-
-_buildMenuCard(
-  context: context,
-  icon: Icons.lock_outline,
-  title: "Change Password",
-  subtitle: "Update your account password",
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ChangePasswordScreen(),
-      ),
-    );
-  },
-),
-
-_buildMenuCard(
-  context: context,
-  icon: Icons.shopping_bag_outlined,
-  title: "Orders",
-  subtitle: "View your previous orders",
-  onTap: () {
-    // TODO: Navigate to Orders Screen
-  },
-),
-
-_buildMenuCard(
-  context: context,
-  icon: Icons.help_outline,
-  title: "Help Center",
-  subtitle: "FAQs and customer support",
-  onTap: () {
-    // TODO: Navigate to Help Center
-  },
-),
-
-const SizedBox(height: 20),
-Container(
-  decoration: BoxDecoration(
-    color: Colors.red.shade50,
-    borderRadius: BorderRadius.circular(20),
-  ),
-  child: ListTile(
-    leading: const Icon(
-      Icons.logout,
-      color: Colors.red,
-    ),
-    title: const Text(
-      "Log Out",
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Colors.red,
-      ),
-    ),
-    subtitle: const Text(
-      "Sign out of your account",
-    ),
-    trailing: const Icon(
-      Icons.arrow_forward_ios,
-      size: 18,
-      color: Colors.red,
-    ),
-    onTap: () async {
-      await Supabase.instance.client.auth.signOut();
-
-      if (context.mounted) {
-        Navigator.pushNamedAndRemoveUntil(
-  context,
-  AppRoutes.welcome,
-  (route) => false,
-);
-      }
-    },
-  ),
-),
-
-const SizedBox(height: 30),
-],
-  ),
-);
+          );
         },
       ),
     );
   }
-  
 
-  Widget _buildMenuCard({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
+  // ── Log Out Button ────────────────────────────────────────────────────────
+
+  Widget _buildLogOutButton() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.cardColor,
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        border: Border.all(color: Colors.transparent),
+        color: const Color(0xFFFFF0F0),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+          onTap: _handleLogout,
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
+                // Icon box
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(icon, color: AppColors.primary, size: 24),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red,
+                    size: 22,
+                  ),
                 ),
+
                 const SizedBox(width: 16),
+
+                // Title + subtitle
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      const Text(
+                        'Log Out',
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                          color: Colors.red,
                         ),
                       ),
-                      const SizedBox(height: 4),
                       Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                        'Sign out of your account',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
                         ),
                       ),
                     ],
                   ),
                 ),
+
+                // Arrow
                 Icon(
-                  Icons.chevron_right,
-                  color: AppColors.textSecondary,
-                  size: 24,
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Colors.red.shade300,
                 ),
               ],
             ),
@@ -795,4 +895,22 @@ const SizedBox(height: 30),
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper model for settings items
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SettingItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _SettingItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
 }
