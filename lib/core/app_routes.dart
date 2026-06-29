@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 // Auth Screens
-import '../screens/auth/splash_screen.dart';
 import '../screens/auth/welcome_screen.dart';
 import '../screens/auth/email_auth_screen.dart';
 import '../screens/auth/login.dart';
@@ -73,8 +72,7 @@ class AppRoutes {
   // ── Route map ─────────────────────────────────────────────────────────────
   static Map<String, WidgetBuilder> routes = {
   // Auth
-  splash: (_) => const SplashScreen(),
-    welcome: (_) => const WelcomeScreen(), // ← NEW
+    welcome: (_) => const WelcomeScreen(),
   login: (_) => const LoginScreen(),
     phoneLogin: (_) => const PhoneLoginScreen(),
     otp: (_) => const OTPScreen(),
