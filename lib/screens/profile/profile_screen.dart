@@ -54,16 +54,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user == null) return {'error': 'No user logged in'};
 
       final response = await Supabase.instance.client
-          .from('profiles')
+          .from('customers')
           .select()
-          .eq('id', user.id)
-          .single();
+          .eq('firebase_uid', user.id)
+          .maybeSingle();
 
+      if (response != null) {
+        return {
+          'fullName': response['full_name'] ?? user.email ?? 'User',
+          'email': response['email'] ?? user.email ?? 'No email',
+          'phoneNumber': response['phone_number'] ?? user.phone ?? '',
+          'imageUrl': response['profile_image_url'] ?? '',
+          'error': null,
+        };
+      }
+
+      // No customer row yet — fall back to auth metadata
       return {
-        'fullName': response['full_name'] ?? user.email ?? 'User',
+        'fullName':
+            user.userMetadata?['full_name'] ??
+            user.email?.split('@')[0] ??
+            'User',
         'email': user.email ?? 'No email',
-        'phoneNumber': response['phone'] ?? user.phone ?? '',
-        'imageUrl': response['avatar_url'] ?? '',
+        'phoneNumber': user.phone ?? '',
+        'imageUrl': '',
         'error': null,
       };
     } catch (_) {
@@ -224,10 +238,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String imageUrl,
   ) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-      ),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+        );
+        if (mounted) {
+          setState(() => _userDataFuture = _fetchUserData());
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
@@ -671,10 +690,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: Icons.person_outline_rounded,
         title: 'Personal Information',
         subtitle: 'Edit your profile information',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-        ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+          );
+          if (mounted) {
+            setState(() => _userDataFuture = _fetchUserData());
+          }
+        },
       ),
       _SettingItem(
         icon: Icons.lock_outline_rounded,
