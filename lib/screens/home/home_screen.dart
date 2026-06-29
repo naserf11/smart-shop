@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     ProductServiceTest().testConnection();
-    
+
     // Initialize futures
     _categoriesFuture = _categoryService.getCategories();
     _offersFuture = _productService.getOffers();
@@ -80,8 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
         AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-  AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
-  break;
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
+        break;
     }
   }
 
@@ -117,31 +117,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 future: _offersFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return SizedBox(
+                    return const SizedBox(
                       height: 180,
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   }
 
                   if (snapshot.hasError) {
-                    return SizedBox(
+                    return const SizedBox(
                       height: 180,
-                      child: Center(
-                        child: Text('Error loading offers'),
-                      ),
+                      child: Center(child: Text('Error loading offers')),
                     );
                   }
 
                   final offers = snapshot.data ?? [];
 
                   if (offers.isEmpty) {
-                    return SizedBox(
+                    return const SizedBox(
                       height: 180,
-                      child: Center(
-                        child: Text('No offers available'),
-                      ),
+                      child: Center(child: Text('No offers available')),
                     );
                   }
 
@@ -152,69 +146,83 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: offers.length,
                       itemBuilder: (context, index) {
                         final offer = offers[index];
-                        final discountPercentage =
-                            offer.oldPrice > 0
-                                ? (((offer.oldPrice - offer.price) / offer.oldPrice) * 100)
-                                    .toStringAsFixed(0)
-                                : '0';
+                        final discountPercentage = offer.oldPrice > 0
+                            ? (((offer.oldPrice - offer.price) /
+                                          offer.oldPrice) *
+                                      100)
+                                  .toStringAsFixed(0)
+                            : '0';
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ProductDetailsScreen(
-                                  product: offer,
-                                ),
+                                builder: (_) =>
+                                    ProductDetailsScreen(product: offer),
                               ),
                             );
                           },
                           child: Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Container(
-                            width: 160,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.grey.shade100,
-                            ),
-                            child: Stack(
-                              children: [
-                                Center(
-                                  child: offer.image.isNotEmpty
-    ? Image.asset(
-        offer.image,
-        fit: BoxFit.contain,
-        height: 120,
-        errorBuilder: (_, __, ___) =>
-            const Icon(Icons.image_not_supported),
-      )
-    : const Icon(Icons.image_not_supported),
-                                ),
-                                Positioned(
-                                  top: 8,
-                                  right: 8,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      '$discountPercentage%',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Container(
+                              width: 160,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.grey.shade100,
+                              ),
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: offer.image.isNotEmpty
+                                        ? (offer.image.startsWith('http')
+                                              ? Image.network(
+                                                  offer.image,
+                                                  fit: BoxFit.contain,
+                                                  height: 120,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      const Icon(
+                                                        Icons
+                                                            .image_not_supported,
+                                                      ),
+                                                )
+                                              : Image.asset(
+                                                  offer.image,
+                                                  fit: BoxFit.contain,
+                                                  height: 120,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      const Icon(
+                                                        Icons
+                                                            .image_not_supported,
+                                                      ),
+                                                ))
+                                        : const Icon(Icons.image_not_supported),
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '$discountPercentage%',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
                         );
                       },
                     ),
@@ -232,31 +240,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 future: _categoriesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return SizedBox(
+                    return const SizedBox(
                       height: 180,
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   }
 
                   if (snapshot.hasError) {
-                    return SizedBox(
+                    return const SizedBox(
                       height: 180,
-                      child: Center(
-                        child: Text('Error loading categories'),
-                      ),
+                      child: Center(child: Text('Error loading categories')),
                     );
                   }
 
                   final categories = snapshot.data ?? [];
 
                   if (categories.isEmpty) {
-                    return SizedBox(
+                    return const SizedBox(
                       height: 180,
-                      child: Center(
-                        child: Text('No categories available'),
-                      ),
+                      child: Center(child: Text('No categories available')),
                     );
                   }
 
@@ -301,18 +303,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 future: _bestSellersFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
+                    return const Center(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        padding: EdgeInsets.symmetric(vertical: 32.0),
                         child: CircularProgressIndicator(),
                       ),
                     );
                   }
 
                   if (snapshot.hasError) {
-                    return Center(
+                    return const Center(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        padding: EdgeInsets.symmetric(vertical: 32.0),
                         child: Text('Error loading best sellers'),
                       ),
                     );
@@ -321,9 +323,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   final bestSellers = snapshot.data ?? [];
 
                   if (bestSellers.isEmpty) {
-                    return Center(
+                    return const Center(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        padding: EdgeInsets.symmetric(vertical: 32.0),
                         child: Text('No best sellers available'),
                       ),
                     );
@@ -361,13 +363,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                     color: Colors.grey.shade100,
                                   ),
                                   child: product.image.isNotEmpty
-    ? Image.asset(
-        product.image,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
-            const Icon(Icons.image_not_supported),
-      )
-    : const Icon(Icons.image_not_supported),
+                                      ? (product.image.startsWith('http')
+                                            ? Image.network(
+                                                product.image,
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const Icon(
+                                                      Icons.image_not_supported,
+                                                    ),
+                                              )
+                                            : Image.asset(
+                                                product.image,
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const Icon(
+                                                      Icons.image_not_supported,
+                                                    ),
+                                              ))
+                                      : const Icon(Icons.image_not_supported),
                                 ),
                               ),
                               Expanded(
@@ -413,7 +426,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   CartService().addToCart(product);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('${product.name} added to cart'),
+                                      content: Text(
+                                        '${product.name} added to cart',
+                                      ),
                                       backgroundColor: Colors.green.shade600,
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(
