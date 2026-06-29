@@ -3,8 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants.dart';
 import '../../core/app_routes.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../services/loyalty_service.dart';
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
+import 'loyalty_screen.dart';
 import '../orders/orders_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<Map<String, dynamic>> _userDataFuture;
+  late Future<Map<String, dynamic>> _loyaltyFuture;
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -23,6 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _userDataFuture = _fetchUserData();
+    _loyaltyFuture = LoyaltyService().getLoyaltyData();
   }
 
   // ── Navigation ───────────────────────────────────────────────────────────
@@ -332,259 +336,336 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Membership Card ───────────────────────────────────────────────────────
+  // ── Membership Card (live data) ─────────────────────────────────────────
 
   Widget _buildMembershipCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF388E3C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.3),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Badge icon
-          Container(
-            width: 58,
-            height: 58,
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _loyaltyFuture,
+      builder: (context, snapshot) {
+        final tier = snapshot.data?['tier']?.toString() ?? 'Bronze';
+        final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+        final memberId = '#${userId.substring(0, 6).toUpperCase()}';
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LoyaltyScreen()),
+            ).then((_) {
+              if (mounted) setState(() => _loyaltyFuture = LoyaltyService().getLoyaltyData());
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF388E3C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(0.3),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            child: const Icon(
-              Icons.workspace_premium,
-              color: Colors.amber,
-              size: 30,
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Membership info
-          Expanded(
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Membership Level',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Gold Member',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                  ),
-                ),
-                const SizedBox(height: 10),
+                // Badge icon
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
+                  width: 58,
+                  height: 58,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
                   ),
-                  child: const Text(
-                    'Active Member',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  child: const Icon(
+                    Icons.workspace_premium,
+                    color: Colors.amber,
+                    size: 30,
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                // Membership info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Membership Level',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$tier Member',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Active Member',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Member ID + QR
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Member ID',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      memberId,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.qr_code_2,
+                        color: Color(0xFF2E7D32),
+                        size: 26,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-
-          // Member ID + QR
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'Member ID',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                '#GP10258',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.qr_code_2,
-                  color: Color(0xFF2E7D32),
-                  size: 26,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  // ── Loyalty Points Card ───────────────────────────────────────────────────
+  // ── Loyalty Points Card (live data) ────────────────────────────────────────
 
   Widget _buildLoyaltyCard() {
-    // TODO: Replace these with real data fetched from Supabase loyalty_points table
-    const double currentPoints = 12350;
-    const double nextTierTarget = 17000;
-    final double progress = currentPoints / nextTierTarget; // 0.726...
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _loyaltyFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            height: 180,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(color: Color(0xFF2E7D32)),
+            ),
+          );
+        }
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          const Row(
-            children: [
-              Icon(Icons.star_rounded, color: Colors.orange, size: 26),
-              SizedBox(width: 8),
-              Text(
-                'Loyalty Points',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF181725),
+        final data = snapshot.data ?? {};
+        final currentPoints = data['currentPoints'] as int? ?? 0;
+        final tier = data['tier']?.toString() ?? 'Bronze';
+        final nextTier = data['nextTier']?.toString() ?? 'Silver';
+        final progress = (data['progress'] as double?) ?? 0.0;
+        final pointsLeft = data['pointsLeft'] as int? ?? 0;
+        final isMaxTier = data['isMaxTier'] as bool? ?? false;
+        final percentText = data['percentText']?.toString() ?? '0%';
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LoyaltyScreen()),
+            ).then((_) {
+              if (mounted) setState(() => _loyaltyFuture = LoyaltyService().getLoyaltyData());
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Points + Tier
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Points number
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      '12,350',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2E7D32),
-                      ),
+                    const Row(
+                      children: [
+                        Icon(Icons.star_rounded, color: Colors.orange, size: 26),
+                        SizedBox(width: 8),
+                        Text(
+                          'Loyalty Points',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF181725),
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Available Points',
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: Colors.grey.shade400,
                     ),
                   ],
                 ),
-              ),
 
-              // Current Tier badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Column(
+                const SizedBox(height: 16),
+
+                // Points + Tier
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'Gold',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2E7D32),
+                    // Points number
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _formatPointsNumber(currentPoints),
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2E7D32),
+                            ),
+                          ),
+                          Text(
+                            'Available Points',
+                            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Current Tier',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
+
+                    // Current Tier badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            tier,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2E7D32),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Current Tier',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: 18),
+                const SizedBox(height: 18),
 
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 10,
+                    backgroundColor: Colors.grey.shade200,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Progress labels
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isMaxTier
+                          ? '🎉 Maximum tier reached!'
+                          : '$percentText to $nextTier',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                    ),
+                    if (!isMaxTier)
+                      Text(
+                        '${_formatPointsNumber(pointsLeft)} pts left',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2E7D32),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
           ),
-
-          const SizedBox(height: 8),
-
-          // Progress labels
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '72% to Platinum',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-              ),
-              const Text(
-                '4,650 pts left',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2E7D32),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  String _formatPointsNumber(int n) {
+    if (n >= 1000) {
+      final s = n.toString();
+      final buffer = StringBuffer();
+      for (int i = 0; i < s.length; i++) {
+        if (i > 0 && (s.length - i) % 3 == 0) buffer.write(',');
+        buffer.write(s[i]);
+      }
+      return buffer.toString();
+    }
+    return n.toString();
   }
 
   // ── Special Offers ────────────────────────────────────────────────────────

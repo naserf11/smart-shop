@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../../services/cart_service.dart';
 import '../../services/order_service.dart';
+import '../../services/loyalty_service.dart';
 import '../../core/app_routes.dart';
 
 class PaymentSimulationScreen extends StatefulWidget {
@@ -21,11 +22,18 @@ class _PaymentSimulationScreenState
     extends State<PaymentSimulationScreen>
     with SingleTickerProviderStateMixin {
   final _cart = CartService();
+  final _loyaltyService = LoyaltyService();
   bool _isProcessing = false;
   bool _isSuccess = false;
   bool _isFailed = false;
   late AnimationController _animController;
   late Animation<double> _scaleAnim;
+
+  // Loyalty points state
+  int _availablePoints = 0;
+  bool _usePoints = false;
+  int _pointsToRedeem = 0;
+  int _pointsEarned = 0;
 
   // Card form controllers
   final _cardNumberCtrl =
@@ -51,6 +59,18 @@ class _PaymentSimulationScreenState
       parent: _animController,
       curve: Curves.elasticOut,
     );
+    _loadLoyaltyData();
+  }
+
+  Future<void> _loadLoyaltyData() async {
+    try {
+      final data = await _loyaltyService.getLoyaltyData();
+      if (mounted) {
+        setState(() {
+          _availablePoints = data['currentPoints'] as int? ?? 0;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -75,10 +95,14 @@ class _PaymentSimulationScreenState
     );
 
     try {
-      // Create the order in Supabase
+      // Create the order in Supabase (points are earned inside OrderService)
       await OrderService().createSupabaseOrder(
         paymentMethod: widget.paymentMethod,
       );
+
+      // Calculate points that were earned
+      final effectiveTotal = _getEffectiveTotal();
+      _pointsEarned = effectiveTotal.floor();
 
       // Clear the cart
       _cart.clearCart();
@@ -105,6 +129,16 @@ class _PaymentSimulationScreenState
         ),
       );
     }
+  }
+
+  /// Returns the total after applying loyalty discount.
+  double _getEffectiveTotal() {
+    final cartTotal = _cart.totalAmount;
+    if (_usePoints && _pointsToRedeem > 0) {
+      final discount = _pointsToRedeem / LoyaltyService.redemptionRate;
+      return (cartTotal - discount).clamp(0.0, cartTotal);
+    }
+    return cartTotal;
   }
 
   void _goToOrders() {
@@ -265,6 +299,14 @@ class _PaymentSimulationScreenState
   Widget _buildOrderSummary() {
     final items = _cart.items;
     final total = _cart.totalAmount;
+    final loyaltyDiscount = _usePoints && _pointsToRedeem > 0
+        ? _pointsToRedeem / LoyaltyService.redemptionRate
+        : 0.0;
+    final effectiveTotal = (total - loyaltyDiscount).clamp(0.0, total);
+    final maxRedeemable = (_availablePoints ~/ LoyaltyService.redemptionRate) *
+        LoyaltyService.redemptionRate;
+    final maxRedeemableForCart =
+        (total * LoyaltyService.redemptionRate).floor().clamp(0, maxRedeemable);
 
     return Container(
       margin: const EdgeInsets.all(20),
@@ -334,7 +376,157 @@ class _PaymentSimulationScreenState
               ),
             ),
           ),
+
+          // ── Loyalty Points Redemption Section ──────────────────────────
+          if (_availablePoints >= LoyaltyService.redemptionRate) ...[
+            const Divider(height: 24),
+            // Toggle row
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF8E1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.star_rounded,
+                    color: Colors.orange,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Use Loyalty Points',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        '${_availablePoints} pts available (= RM ${(_availablePoints / LoyaltyService.redemptionRate).toStringAsFixed(2)})',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _usePoints,
+                  activeColor: const Color(0xFF2E7D32),
+                  onChanged: (val) {
+                    setState(() {
+                      _usePoints = val;
+                      if (val) {
+                        _pointsToRedeem = maxRedeemableForCart.clamp(0, _availablePoints);
+                      } else {
+                        _pointsToRedeem = 0;
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
+
+            // Slider for points selection
+            if (_usePoints && maxRedeemableForCart > 0) ...[
+              const SizedBox(height: 8),
+              SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: const Color(0xFF2E7D32),
+                  inactiveTrackColor: Colors.grey.shade200,
+                  thumbColor: const Color(0xFF2E7D32),
+                  overlayColor: const Color(0xFF2E7D32).withOpacity(0.1),
+                  trackHeight: 4,
+                ),
+                child: Slider(
+                  value: _pointsToRedeem.toDouble(),
+                  min: 0,
+                  max: maxRedeemableForCart.toDouble(),
+                  divisions: maxRedeemableForCart ~/ LoyaltyService.redemptionRate,
+                  label: '$_pointsToRedeem pts',
+                  onChanged: (val) {
+                    setState(() {
+                      _pointsToRedeem = val.round();
+                    });
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Redeem: $_pointsToRedeem pts',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF2E7D32),
+                      ),
+                    ),
+                    Text(
+                      '-RM ${loyaltyDiscount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+
           const Divider(height: 24),
+
+          // Show discount line if using points
+          if (_usePoints && loyaltyDiscount > 0) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Subtotal',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                Text(
+                  'RM ${total.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Loyalty Discount',
+                  style: TextStyle(fontSize: 14, color: Colors.orange),
+                ),
+                Text(
+                  '-RM ${loyaltyDiscount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+          ],
+
           Row(
             mainAxisAlignment:
                 MainAxisAlignment.spaceBetween,
@@ -347,11 +539,28 @@ class _PaymentSimulationScreenState
                 ),
               ),
               Text(
-                'RM ${total.toStringAsFixed(2)}',
+                'RM ${effectiveTotal.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+
+          // Points to be earned
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                'You will earn ${effectiveTotal.floor()} points from this order',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
             ],
@@ -822,7 +1031,7 @@ class _PaymentSimulationScreenState
                   ],
                 )
               : Text(
-                  'Complete Payment  •  RM ${_cart.totalAmount.toStringAsFixed(2)}',
+                  'Complete Payment  •  RM ${_getEffectiveTotal().toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
@@ -888,7 +1097,54 @@ class _PaymentSimulationScreenState
                     color: Colors.grey.shade500,
                   ),
                 ),
-                const SizedBox(height: 48),
+
+                // Loyalty points earned badge
+                if (_pointsEarned > 0) ...[
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8E1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.amber.shade200,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Colors.amber,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '+$_pointsEarned Points Earned!',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Color(0xFF2E7D32),
+                              ),
+                            ),
+                            Text(
+                              'Added to your loyalty balance',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 SizedBox(
                   width: double.infinity,
                   height: 56,

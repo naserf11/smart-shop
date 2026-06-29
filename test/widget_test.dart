@@ -14,7 +14,7 @@ void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
-  const GroceryPlusApp(),
+  const GroceryPlusApp(initialRoute: '/welcome'),
 );
 
     // Verify that our counter starts at 0.

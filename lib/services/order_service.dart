@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/order.dart';
 import '../services/cart_service.dart';
 import '../services/supabase_service.dart';
+import '../services/loyalty_service.dart';
 
 class OrderService {
   static final OrderService _instance =
@@ -108,6 +109,17 @@ class OrderService {
         await _supabase
             .from('order_items')
             .insert(orderItems);
+
+        // 5. Award loyalty points
+        try {
+          final pointsEarned = await LoyaltyService().earnPoints(
+            orderId: orderId,
+            orderAmount: cart.totalAmount,
+          );
+          print('🌟 Earned $pointsEarned loyalty points');
+        } catch (loyaltyErr) {
+          print('⚠️ Loyalty points award failed (order still succeeded): $loyaltyErr');
+        }
 
         print('✅ Order $orderId ($orderNum) created successfully in Supabase');
       }

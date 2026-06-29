@@ -26,6 +26,7 @@ import '../screens/cart/payment_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/settings_screen.dart';
+import '../screens/profile/loyalty_screen.dart';
 
 import '../screens/orders/orders_screen.dart';
 import '../screens/orders/order_history_screen.dart';
@@ -46,6 +47,7 @@ class AppRoutes {
   static const profile = '/profile';
   static const editProfile = '/editProfile';
   static const settings = '/settings';
+  static const loyalty = '/loyalty';
 
   // ── Orders ────────────────────────────────────────────────────────────────
   static const orders = '/orders';
@@ -84,6 +86,7 @@ class AppRoutes {
     profile: (_) => const ProfileScreen(),
     editProfile: (_) => const EditProfileScreen(),
     settings: (_) => const SettingsScreen(),
+    loyalty: (_) => const LoyaltyScreen(),
 
     // Orders
     orders: (_) => const OrdersScreen(),
