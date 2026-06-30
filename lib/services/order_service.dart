@@ -46,8 +46,10 @@ class OrderService {
   ///  3. Inserts into `orders`
   ///  4. Inserts cart items into `order_items`
   Future<void> createSupabaseOrder({
-    required String paymentMethod,
-  }) async {
+  required String paymentMethod,
+  double? orderTotal,
+  int redeemedPoints = 0,
+}) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
       throw Exception('User not authenticated');
@@ -75,19 +77,32 @@ class OrderService {
       final orderNum = "ORD-$dateStr-$timeStr-$randomStr";
 
       // 3. Insert order
-      final orderResponse = await _supabase
-          .from('orders')
-          .insert({
-            'customer_id': customerId,
-            'order_number': orderNum,
-            'order_type': 'self_checkout',
-            'order_status': 'pending',
-            'total_amount': cart.totalAmount,
-            'address_id': addressId,
-            'payment_method': paymentMethod,
-          })
-          .select('order_id')
-          .single();
+      final total = orderTotal ?? cart.totalAmount;
+
+for (final item in cart.items) {
+  print('DEBUG product id: ${item.product.id}');
+  print('DEBUG product name: ${item.product.name}');
+}
+
+final orderResponse = await _supabase
+    .from('orders')
+    .insert({
+      'customer_id': customerId,
+      'order_number': orderNum,
+      'order_type': 'self_checkout',
+      'order_status': 'pending',
+
+      'subtotal': total,
+      'tax_amount': 0,
+      'delivery_fee': 0,
+      'discount_amount': 0,
+      'total_amount': total,
+
+      'address_id': addressId,
+      'payment_method': paymentMethod,
+    })
+    .select('order_id')
+    .single();
 
       orderId = orderResponse['order_id']?.toString();
 
@@ -99,7 +114,12 @@ class OrderService {
                 return {
                   'order_id': orderId,
                   'product_id': item.product.id,
+                  'product_name_snapshot': item.product.name,
+                  'sku_snapshot': item.product.id,
+                  'unit_price_snapshot': item.product.price,
                   'quantity': item.quantity,
+                  'tax_amount': 0,
+                  'discount_amount': 0,
                   'line_total': item.totalPrice,
                 };
               },
@@ -112,9 +132,21 @@ class OrderService {
 
         // 5. Award loyalty points
         try {
+          // Redeem loyalty points if the user used any
+if (redeemedPoints > 0) {
+  try {
+    await LoyaltyService().redeemPoints(
+      orderId: orderId,
+      pointsToRedeem: redeemedPoints,
+    );
+    print('✅ Redeemed $redeemedPoints loyalty points');
+  } catch (e) {
+    print('⚠️ Failed to redeem loyalty points: $e');
+  }
+}
           final pointsEarned = await LoyaltyService().earnPoints(
             orderId: orderId,
-            orderAmount: cart.totalAmount,
+            orderAmount: orderTotal ?? cart.totalAmount,
           );
           print('🌟 Earned $pointsEarned loyalty points');
         } catch (loyaltyErr) {
@@ -138,7 +170,7 @@ class OrderService {
       id: finalId,
       orderDate: DateTime.now(),
       items: List.from(cart.items),
-      totalAmount: cart.totalAmount,
+      totalAmount: orderTotal ?? cart.totalAmount,
       status: OrderStatus.pending,
     );
 

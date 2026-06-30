@@ -352,14 +352,23 @@ final SpecialOfferService _offerService = SpecialOfferService();
         final memberId = '#${userId.substring(0, 6).toUpperCase()}';
 
         return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LoyaltyScreen()),
-            ).then((_) {
-              if (mounted) setState(() => _loyaltyFuture = LoyaltyService().getLoyaltyData());
-            });
-          },
+          onTap: () async {
+  await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const LoyaltyScreen(),
+    ),
+  );
+
+  if (!mounted) return;
+
+  setState(() {
+    _loyaltyFuture = LoyaltyService().getLoyaltyData();
+  });
+},
+
+
+          
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -507,16 +516,22 @@ final SpecialOfferService _offerService = SpecialOfferService();
         final isMaxTier = data['isMaxTier'] as bool? ?? false;
         final percentText = data['percentText']?.toString() ?? '0%';
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LoyaltyScreen()),
-            ).then((_) {
-              if (mounted) setState(() => _loyaltyFuture = LoyaltyService().getLoyaltyData());
-            });
-          },
-          child: Container(
+       return GestureDetector(
+  onTap: () async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const LoyaltyScreen(),
+      ),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _loyaltyFuture = LoyaltyService().getLoyaltyData();
+    });
+  },
+  child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,

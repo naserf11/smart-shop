@@ -95,13 +95,17 @@ class _PaymentSimulationScreenState
     );
 
     try {
-      // Create the order in Supabase (points are earned inside OrderService)
+      // Calculate the final amount after loyalty discount
+      final effectiveTotal = _getEffectiveTotal();
+
+      // Create the order in Supabase
       await OrderService().createSupabaseOrder(
         paymentMethod: widget.paymentMethod,
+        orderTotal: effectiveTotal,
+        redeemedPoints: _pointsToRedeem,
       );
 
       // Calculate points that were earned
-      final effectiveTotal = _getEffectiveTotal();
       _pointsEarned = effectiveTotal.floor();
 
       // Clear the cart

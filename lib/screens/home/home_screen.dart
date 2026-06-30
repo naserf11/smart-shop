@@ -10,7 +10,6 @@ import '../../models/product.dart';
 import '../../services/category_service.dart';
 import '../../services/product_service.dart';
 import '../../services/cart_service.dart';
-import '../../services/product_service_test.dart';
 import '../products/category_products_screen.dart';
 import '../products/product_details_screen.dart';
 
@@ -36,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    ProductServiceTest().testConnection();
 
     // Initialize futures
     _categoriesFuture = _categoryService.getCategories();
@@ -339,7 +337,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       final product = bestSellers[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: Container(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProductDetailsScreen(product: product),
+                              ),
+                            );
+                          },
+                          child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             color: Colors.white,
@@ -399,8 +406,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Row(
                                       children: [
                                         Text(
-                                          'RM ${product.price}',
-                                          style: const TextStyle(
+  'RM ${product.price.toStringAsFixed(2)}',
+                                            style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
                                           ),
@@ -408,8 +415,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         const SizedBox(width: 8),
                                         if (product.oldPrice > 0)
                                           Text(
-                                            'RM ${product.oldPrice}',
-                                            style: TextStyle(
+  'RM ${product.oldPrice.toStringAsFixed(2)}',
+                                              style: TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey.shade600,
                                               decoration:
@@ -450,7 +457,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                      );
+                      ),
+                    );
                     },
                   );
                 },
