@@ -8,6 +8,8 @@ import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
 import 'loyalty_screen.dart';
 import '../orders/orders_screen.dart';
+import '../../models/special_offer.dart';
+import '../../services/special_offer_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,12 +21,15 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<Map<String, dynamic>> _userDataFuture;
   late Future<Map<String, dynamic>> _loyaltyFuture;
+  late Future<List<SpecialOffer>> _offersFuture;
+final SpecialOfferService _offerService = SpecialOfferService();
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
+    _offersFuture = _offerService.getSpecialOffers();
     _userDataFuture = _fetchUserData();
     _loyaltyFuture = LoyaltyService().getLoyaltyData();
   }
@@ -671,98 +676,162 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ── Special Offers ────────────────────────────────────────────────────────
 
   Widget _buildSpecialOffers() {
-    return Row(
-      children: [
-        // Left — green offer
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
+    return FutureBuilder<List<SpecialOffer>>(
+      future: _offersFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFF2E7D32),
+            ),
+          );
+        }
+
+       if (snapshot.hasError) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Center(
+      child: Text(
+        snapshot.error.toString(),
+        style: const TextStyle(fontSize: 12),
+      ),
+    ),
+  );
+}
+
+        final offers = snapshot.data ?? [];
+
+        if (offers.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.local_offer_rounded,
-                  color: Color(0xFF2E7D32),
-                  size: 28,
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  '20% OFF',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2E7D32),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Fresh Fruits',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF181725),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Valid until 30 June',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                ),
-              ],
+            child: const Center(
+              child: Text('No special offers available'),
             ),
-          ),
-        ),
+          );
+        }
 
-        const SizedBox(width: 12),
+        return Column(
+          children: offers.map((offer) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(18),
+  border: Border.all(
+    color: const Color(0xFFE8F5E9),
+    width: 1,
+  ),
+  boxShadow: [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.04),
+      blurRadius: 10,
+      offset: const Offset(0, 4),
+    ),
+  ],
+),
+              child: Row(
+                children: [
+                  Container(
+  width: 54,
+  height: 54,
+  decoration: BoxDecoration(
+    color: const Color(0xFFE8F5E9),
+    borderRadius: BorderRadius.circular(14),
+  ),
+  child: const Icon(
+    Icons.local_offer_rounded,
+    color: Color(0xFF2E7D32),
+    size: 28,
+  ),
+),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Discount badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E7D32),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            offer.subtitle ?? '${offer.discount}% OFF',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
 
-        // Right — amber offer
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8E1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.redeem_rounded, color: Colors.orange, size: 28),
-                const SizedBox(height: 10),
-                const Text(
-                  'SPECIAL\nDISCOUNT',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange,
-                    height: 1.2,
+                        const SizedBox(height: 10),
+
+                        Text(
+                          offer.title,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF181725),
+                          ),
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        Text(
+                          offer.description ?? '',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade700,
+                            height: 1.4,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.schedule_rounded,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              offer.validUntil != null
+                                  ? 'Valid until ${offer.validUntil!.day}/${offer.validUntil!.month}/${offer.validUntil!.year}'
+                                  : 'Limited time offer',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'On All Orders',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF181725),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'For orders above RM 80',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
-
   // ── Profile Settings ──────────────────────────────────────────────────────
 
   Widget _buildProfileSettings(BuildContext context) {
