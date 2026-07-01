@@ -103,7 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              SearchBarWidget(controller: searchController),
+                            SearchBarWidget(
+                controller: searchController,
+                readOnly: true,
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.search);
+                },
+              ),
               const SizedBox(height: 25),
               // Offers Section
               const Text(
