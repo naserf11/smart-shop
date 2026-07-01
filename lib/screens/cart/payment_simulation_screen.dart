@@ -35,6 +35,13 @@ class _PaymentSimulationScreenState
   int _pointsToRedeem = 0;
   int _pointsEarned = 0;
 
+  // Promo code section state
+  final TextEditingController _promoCodeController = TextEditingController();
+  bool _promoApplied = false;
+  double _promoDiscount = 0.0;
+  String _promoMessage = '';
+  String _appliedPromoCode = '';
+
   // Card form controllers
   final _cardNumberCtrl =
       TextEditingController(text: '4242 4242 4242 4242');
@@ -80,6 +87,7 @@ class _PaymentSimulationScreenState
     _expiryCtrl.dispose();
     _cvvCtrl.dispose();
     _nameCtrl.dispose();
+    _promoCodeController.dispose();
     super.dispose();
   }
 
@@ -100,23 +108,31 @@ class _PaymentSimulationScreenState
 
       // Create the order in Supabase
       await OrderService().createSupabaseOrder(
-        paymentMethod: widget.paymentMethod,
-        orderTotal: effectiveTotal,
-        redeemedPoints: _pointsToRedeem,
-      );
+  paymentMethod: widget.paymentMethod,
+  orderTotal: effectiveTotal,
+  redeemedPoints: _pointsToRedeem,
+  promoCode: _promoApplied ? _appliedPromoCode : null,
+  promoDiscount: _promoDiscount,
+);
 
       // Calculate points that were earned
       _pointsEarned = effectiveTotal.floor();
 
       // Clear the cart
-      _cart.clearCart();
+_cart.clearCart();
 
-      if (!mounted) return;
+if (!mounted) return;
 
-      setState(() {
-        _isProcessing = false;
-        _isSuccess = true;
-      });
+setState(() {
+  _promoApplied = false;
+  _promoDiscount = 0;
+  _promoMessage = '';
+  _appliedPromoCode = '';
+  _promoCodeController.clear();
+
+  _isProcessing = false;
+  _isSuccess = true;
+});
 
       _animController.forward();
     } catch (e) {
@@ -135,14 +151,78 @@ class _PaymentSimulationScreenState
     }
   }
 
-  /// Returns the total after applying loyalty discount.
+  /// Returns the total after applying promo and loyalty discount.
   double _getEffectiveTotal() {
-    final cartTotal = _cart.totalAmount;
+    double total = _cart.totalAmount;
+
+    total -= _promoDiscount;
+
     if (_usePoints && _pointsToRedeem > 0) {
-      final discount = _pointsToRedeem / LoyaltyService.redemptionRate;
-      return (cartTotal - discount).clamp(0.0, cartTotal);
+      total -= _pointsToRedeem / LoyaltyService.redemptionRate;
     }
-    return cartTotal;
+
+    return total.clamp(0.0, _cart.totalAmount);
+  }
+
+  void _applyPromoCode() {
+    final code = _promoCodeController.text.trim().toUpperCase();
+    final subtotal = _cart.totalAmount;
+    final itemCount = _cart.items.fold<int>(0, (sum, item) => sum + item.quantity);
+
+    setState(() {
+      _promoApplied = false;
+      _promoDiscount = 0;
+      _promoMessage = '';
+
+      switch (code) {
+        case 'SAVE10':
+          if (subtotal >= 50) {
+            _promoDiscount = subtotal * 0.10;
+          } else {
+            _promoMessage = 'Minimum purchase RM50 required.';
+            return;
+          }
+          break;
+
+        case 'SAVE20':
+          if (subtotal >= 100) {
+            _promoDiscount = subtotal * 0.20;
+          } else {
+            _promoMessage = 'Minimum purchase RM100 required.';
+            return;
+          }
+          break;
+
+        case 'WELCOME10':
+          _promoDiscount = 10;
+          break;
+
+        case 'MEMBER5':
+          _promoDiscount = 5;
+          break;
+
+        case 'BUYMORE':
+          if (itemCount >= 5) {
+            _promoDiscount = 15;
+          } else {
+            _promoMessage = 'Buy at least 5 items to use this code.';
+            return;
+          }
+          break;
+
+        default:
+          _promoMessage = 'Invalid promotion code';
+          return;
+      }
+
+      if (_promoDiscount > subtotal) {
+        _promoDiscount = subtotal;
+      }
+
+      _promoApplied = true;
+      _appliedPromoCode = code;
+_promoMessage = '$code applied successfully';
+    });
   }
 
   void _goToOrders() {
@@ -190,19 +270,16 @@ class _PaymentSimulationScreenState
           children: [
             // Order Summary Card
             _buildOrderSummary(),
-
             const SizedBox(height: 16),
-
+            // Promo Code Section
+            _buildPromoCodeCard(),
+            const SizedBox(height: 16),
             // Payment Form
             _buildPaymentForm(),
-
             const SizedBox(height: 24),
-
             // Process Button
             _buildProcessButton(),
-
             const SizedBox(height: 16),
-
             // Simulation notice
             Container(
               margin: const EdgeInsets.symmetric(
@@ -211,8 +288,7 @@ class _PaymentSimulationScreenState
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.amber.shade50,
-                borderRadius:
-                    BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: Colors.amber.shade200,
                 ),
@@ -229,8 +305,7 @@ class _PaymentSimulationScreenState
                     child: Text(
                       'This is a simulated payment for testing purposes.',
                       style: TextStyle(
-                        color:
-                            Colors.amber.shade900,
+                        color: Colors.amber.shade900,
                         fontSize: 13,
                       ),
                     ),
@@ -238,19 +313,16 @@ class _PaymentSimulationScreenState
                 ],
               ),
             ),
-
             if (_isFailed) ...[
               const SizedBox(height: 16),
               Container(
-                margin:
-                    const EdgeInsets.symmetric(
+                margin: const EdgeInsets.symmetric(
                   horizontal: 20,
                 ),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
-                  borderRadius:
-                      BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: Colors.red.shade200,
                   ),
@@ -267,11 +339,9 @@ class _PaymentSimulationScreenState
                       child: Text(
                         'Payment failed. Please try again.',
                         style: TextStyle(
-                          color:
-                              Colors.red.shade900,
+                          color: Colors.red.shade900,
                           fontSize: 13,
-                          fontWeight:
-                              FontWeight.w500,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -279,10 +349,193 @@ class _PaymentSimulationScreenState
                 ),
               ),
             ],
-
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Promo Code Section UI ─────────────────────────────────────────────
+  Widget _buildPromoCodeCard() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.local_offer_outlined, color: AppColors.primary, size: 22),
+              const SizedBox(width: 10),
+              const Text(
+                'Promotion Code',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _promoCodeController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter code',
+                    prefixIcon: const Icon(Icons.card_giftcard, size: 20),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade200,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade200,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 110,
+                height: 55,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 1,
+                    padding: EdgeInsets.zero,
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+onPressed: _promoApplied ? null : _applyPromoCode,
+                  child: const Text('Apply'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'One promotion code may be applied per order.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_promoMessage.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              _promoMessage,
+              style: TextStyle(
+                color: _promoApplied ? Colors.green : Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (_promoApplied && _appliedPromoCode.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+  padding: const EdgeInsets.symmetric(
+    horizontal: 14,
+    vertical: 14,
+  ),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+  Icons.check_circle,
+  color: AppColors.primary,
+  size: 22,
+),
+                  const SizedBox(width: 8),
+                  Text(
+                    '$_appliedPromoCode • Saved RM ${_promoDiscount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+  color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+TextButton.icon(
+  onPressed: () {
+    setState(() {
+      _promoApplied = false;
+      _promoDiscount = 0;
+      _promoMessage = '';
+      _appliedPromoCode = '';
+      _promoCodeController.clear();
+    });
+  },
+  icon: const Icon(
+  Icons.delete_outline,
+  color: AppColors.primary,
+),
+  
+  label: const Text(
+  'Remove Promo Code',
+  style: TextStyle(
+    color: AppColors.primary,
+    fontWeight: FontWeight.w600,
+  ),
+),
+),
+          ],
+        ],
       ),
     );
   }
@@ -306,7 +559,8 @@ class _PaymentSimulationScreenState
     final loyaltyDiscount = _usePoints && _pointsToRedeem > 0
         ? _pointsToRedeem / LoyaltyService.redemptionRate
         : 0.0;
-    final effectiveTotal = (total - loyaltyDiscount).clamp(0.0, total);
+    final effectiveTotal =
+        (total - _promoDiscount - loyaltyDiscount).clamp(0.0, total);
     final maxRedeemable = (_availablePoints ~/ LoyaltyService.redemptionRate) *
         LoyaltyService.redemptionRate;
     final maxRedeemableForCart =
@@ -327,8 +581,7 @@ class _PaymentSimulationScreenState
         ],
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -354,9 +607,7 @@ class _PaymentSimulationScreenState
                 bottom: 8,
               ),
               child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Text(
@@ -365,8 +616,7 @@ class _PaymentSimulationScreenState
                         color: Colors.grey.shade700,
                         fontSize: 14,
                       ),
-                      overflow:
-                          TextOverflow.ellipsis,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(
@@ -510,6 +760,25 @@ class _PaymentSimulationScreenState
                 ),
               ],
             ),
+            if (_promoDiscount > 0) ...[
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                   Text(
+                    'Promotion ($_appliedPromoCode)',
+                    style: TextStyle(fontSize: 14, color: Colors.green),
+                  ),
+                  Text(
+                    '-RM ${_promoDiscount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+  color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -530,10 +799,75 @@ class _PaymentSimulationScreenState
             ),
             const SizedBox(height: 6),
           ],
+          if (!_usePoints || loyaltyDiscount <= 0) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Subtotal',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                Text(
+                  'RM ${total.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+            if (_promoDiscount > 0) ...[
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Promotion ($_appliedPromoCode)',
+                    style: TextStyle(fontSize: 14, color: Colors.green),
+                  ),
+                  Text(
+                    '-RM ${_promoDiscount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+  color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+          if ((_promoDiscount + loyaltyDiscount) > 0) ...[
+  const SizedBox(height: 12),
 
+  Container(
+    margin: const EdgeInsets.only(top: 12),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: AppColors.primary.withOpacity(.08),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      children: [
+        const Icon(
+          Icons.savings,
+          color: Colors.green,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'You saved RM ${(_promoDiscount + loyaltyDiscount).toStringAsFixed(2)} on this order.',
+            style: const TextStyle(
+  color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+],
           Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 'Total',
@@ -545,7 +879,7 @@ class _PaymentSimulationScreenState
               Text(
                 'RM ${effectiveTotal.toStringAsFixed(2)}',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
                 ),
@@ -893,7 +1227,7 @@ class _PaymentSimulationScreenState
           const Text(
             "Touch 'n Go eWallet",
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -1149,6 +1483,7 @@ class _PaymentSimulationScreenState
                     ),
                   ),
                 ],
+                const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
                   height: 56,

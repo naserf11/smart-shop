@@ -104,13 +104,16 @@ class BottomNavBar extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? AppColors.primary : Colors.grey,
-              ),
-            ),
+  label,
+  maxLines: 1,
+  overflow: TextOverflow.ellipsis,
+  textAlign: TextAlign.center,
+  style: TextStyle(
+    fontSize: 11,
+    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+    color: isSelected ? AppColors.primary : Colors.grey,
+  ),
+),
           ],
         ),
       ),
