@@ -120,7 +120,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              SearchBarWidget(controller: searchController),
+                            SearchBarWidget(
+                controller: searchController,
+                readOnly: true,
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.search);
+                },
+              ),
               const SizedBox(height: 24),
               _buildSectionHeader(
                 title: 'Offers',

@@ -49,6 +49,8 @@ class OrderService {
   required String paymentMethod,
   double? orderTotal,
   int redeemedPoints = 0,
+  String? promoCode,
+  double promoDiscount = 0,
 }) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
@@ -77,12 +79,13 @@ class OrderService {
       final orderNum = "ORD-$dateStr-$timeStr-$randomStr";
 
       // 3. Insert order
-      final total = orderTotal ?? cart.totalAmount;
+      final subtotal = cart.totalAmount;
+      final total = orderTotal ?? subtotal;
 
-for (final item in cart.items) {
-  print('DEBUG product id: ${item.product.id}');
-  print('DEBUG product name: ${item.product.name}');
-}
+      for (final item in cart.items) {
+        print('DEBUG product id: ${item.product.id}');
+        print('DEBUG product name: ${item.product.name}');
+      }
 
 final orderResponse = await _supabase
     .from('orders')
@@ -92,11 +95,12 @@ final orderResponse = await _supabase
       'order_type': 'self_checkout',
       'order_status': 'pending',
 
-      'subtotal': total,
+      'subtotal': subtotal,
       'tax_amount': 0,
       'delivery_fee': 0,
-      'discount_amount': 0,
-      'total_amount': total,
+      'discount_amount': promoDiscount,
+'total_amount': total,
+'promo_code': promoCode,
 
       'address_id': addressId,
       'payment_method': paymentMethod,
@@ -119,7 +123,7 @@ final orderResponse = await _supabase
                   'unit_price_snapshot': item.product.price,
                   'quantity': item.quantity,
                   'tax_amount': 0,
-                  'discount_amount': 0,
+                  'discount_amount': promoDiscount,
                   'line_total': item.totalPrice,
                 };
               },
