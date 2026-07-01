@@ -300,99 +300,120 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: List.generate(LoyaltyService.tiers.length, (index) {
-              final t = LoyaltyService.tiers[index];
-              final tierName = t['name'] as String;
-              final tierMin = t['min'] as int;
-              final isActive = lifetimePoints >= tierMin;
-              final isCurrent =
-                  _loyaltyService.calculateTier(lifetimePoints) == tierName;
+          // --- Start of new Stack for continuous line ---
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              // Background line
+              Positioned(
+                left: 28,
+                right: 28,
+                top: 18,
+                child: Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Active progress line
+              Positioned(
+                left: 28,
+                right: 28,
+                top: 18,
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: (LoyaltyService.tiers.length <= 1)
+                      ? 1.0
+                      : (_loyaltyService.calculateTier(lifetimePoints) == 'Bronze'
+                          ? 0.0
+                          : _loyaltyService.calculateTier(lifetimePoints) == 'Silver'
+                              ? 0.33
+                              : _loyaltyService.calculateTier(lifetimePoints) == 'Gold'
+                                  ? 0.66
+                                  : 1.0),
+                  child: Container(
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E7D32),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ),
+              // Row of circles and labels
+              Row(
+                children: List.generate(LoyaltyService.tiers.length, (index) {
+                  final t = LoyaltyService.tiers[index];
+                  final tierName = t['name'] as String;
+                  final tierMin = t['min'] as int;
+                  final isActive = lifetimePoints >= tierMin;
+                  final isCurrent =
+                      _loyaltyService.calculateTier(lifetimePoints) == tierName;
 
-              return Expanded(
-                child: Column(
-                  children: [
-                    // Connector + circle
-                    Row(
+                  return Expanded(
+                    child: Column(
                       children: [
-                        if (index > 0)
-                          Expanded(
+                        SizedBox(
+                          height: 40,
+                          child: Center(
                             child: Container(
-                              height: 3,
-                              color: isActive
-                                  ? const Color(0xFF2E7D32)
-                                  : Colors.grey.shade300,
+                              width: isCurrent ? 36 : 28,
+                              height: isCurrent ? 36 : 28,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isActive
+                                    ? const Color(0xFF2E7D32)
+                                    : Colors.grey.shade300,
+                                border: isCurrent
+                                    ? Border.all(color: Colors.amber, width: 3)
+                                    : null,
+                                boxShadow: isCurrent
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.green.withOpacity(0.3),
+                                          blurRadius: 8,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Icon(
+                                isActive ? Icons.check : Icons.lock_outline,
+                                color: Colors.white,
+                                size: isCurrent ? 18 : 14,
+                              ),
                             ),
-                          ),
-                        Container(
-                          width: isCurrent ? 36 : 28,
-                          height: isCurrent ? 36 : 28,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isActive
-                                ? const Color(0xFF2E7D32)
-                                : Colors.grey.shade300,
-                            border: isCurrent
-                                ? Border.all(
-                                    color: Colors.amber, width: 3)
-                                : null,
-                            boxShadow: isCurrent
-                                ? [
-                                    BoxShadow(
-                                      color:
-                                          Colors.green.withOpacity(0.3),
-                                      blurRadius: 8,
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Icon(
-                            isActive
-                                ? Icons.check
-                                : Icons.lock_outline,
-                            color: Colors.white,
-                            size: isCurrent ? 18 : 14,
                           ),
                         ),
-                        if (index < LoyaltyService.tiers.length - 1)
-                          Expanded(
-                            child: Container(
-                              height: 3,
-                              color: lifetimePoints >=
-                                      (LoyaltyService
-                                              .tiers[index + 1]['min']
-                                          as int)
-                                  ? const Color(0xFF2E7D32)
-                                  : Colors.grey.shade300,
-                            ),
+                        const SizedBox(height: 8),
+                        Text(
+                          tierName,
+                          style: TextStyle(
+                            fontSize: isCurrent ? 13 : 11,
+                            fontWeight: isCurrent
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: isActive
+                                ? const Color(0xFF2E7D32)
+                                : Colors.grey,
                           ),
+                        ),
+                        Text(
+                          '${_formatNumber(tierMin)}+',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      tierName,
-                      style: TextStyle(
-                        fontSize: isCurrent ? 13 : 11,
-                        fontWeight: isCurrent
-                            ? FontWeight.bold
-                            : FontWeight.w500,
-                        color: isActive
-                            ? const Color(0xFF2E7D32)
-                            : Colors.grey,
-                      ),
-                    ),
-                    Text(
-                      '${_formatNumber(tierMin)}+',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
+                  );
+                }),
+              ),
+            ],
           ),
+          // --- End of new Stack ---
         ],
       ),
     );

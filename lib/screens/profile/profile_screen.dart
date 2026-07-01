@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants.dart';
 import '../../core/app_routes.dart';
@@ -836,6 +837,59 @@ final SpecialOfferService _offerService = SpecialOfferService();
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
+
+InkWell(
+  borderRadius: BorderRadius.circular(10),
+  onTap: () async {
+    if (offer.promoCode == null) return;
+
+    await Clipboard.setData(
+      ClipboardData(text: offer.promoCode!),
+    );
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+  content: Text(
+    '${offer.promoCode} copied to clipboard',
+  ),
+  backgroundColor: const Color(0xFF2E7D32),
+  behavior: SnackBarBehavior.floating,
+  duration: const Duration(seconds: 2),
+),
+    );
+  },
+  child: Container(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 12,
+      vertical: 10,
+    ),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE8F5E9),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            offer.promoCode ?? '',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2E7D32),
+            ),
+          ),
+        ),
+        const Icon(
+          Icons.copy_rounded,
+          size: 18,
+          color: Color(0xFF2E7D32),
+        ),
+      ],
+    ),
+  ),
+),
                       ],
                     ),
                   ),

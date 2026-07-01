@@ -3,6 +3,7 @@ import '../../core/constants.dart';
 import '../../services/cart_service.dart';
 import '../../services/order_service.dart';
 import '../../services/loyalty_service.dart';
+import '../../services/promo_code_service.dart';
 import '../../core/app_routes.dart';
 
 class PaymentSimulationScreen extends StatefulWidget {
@@ -164,66 +165,40 @@ setState(() {
     return total.clamp(0.0, _cart.totalAmount);
   }
 
-  void _applyPromoCode() {
-    final code = _promoCodeController.text.trim().toUpperCase();
-    final subtotal = _cart.totalAmount;
-    final itemCount = _cart.items.fold<int>(0, (sum, item) => sum + item.quantity);
+  Future<void> _applyPromoCode() async {
+  final code = _promoCodeController.text.trim().toUpperCase();
+  final subtotal = _cart.totalAmount;
 
+  if (code.isEmpty) {
     setState(() {
       _promoApplied = false;
       _promoDiscount = 0;
-      _promoMessage = '';
-
-      switch (code) {
-        case 'SAVE10':
-          if (subtotal >= 50) {
-            _promoDiscount = subtotal * 0.10;
-          } else {
-            _promoMessage = 'Minimum purchase RM50 required.';
-            return;
-          }
-          break;
-
-        case 'SAVE20':
-          if (subtotal >= 100) {
-            _promoDiscount = subtotal * 0.20;
-          } else {
-            _promoMessage = 'Minimum purchase RM100 required.';
-            return;
-          }
-          break;
-
-        case 'WELCOME10':
-          _promoDiscount = 10;
-          break;
-
-        case 'MEMBER5':
-          _promoDiscount = 5;
-          break;
-
-        case 'BUYMORE':
-          if (itemCount >= 5) {
-            _promoDiscount = 15;
-          } else {
-            _promoMessage = 'Buy at least 5 items to use this code.';
-            return;
-          }
-          break;
-
-        default:
-          _promoMessage = 'Invalid promotion code';
-          return;
-      }
-
-      if (_promoDiscount > subtotal) {
-        _promoDiscount = subtotal;
-      }
-
-      _promoApplied = true;
-      _appliedPromoCode = code;
-_promoMessage = '$code applied successfully';
+      _promoMessage = 'Please enter a promotion code.';
     });
+    return;
   }
+
+  final result = await PromoCodeService().validatePromoCode(
+    code: code,
+    subtotal: subtotal,
+  );
+
+  if (!mounted) return;
+
+  setState(() {
+    if (!result.success) {
+      _promoApplied = false;
+      _promoDiscount = 0;
+      _promoMessage = result.message;
+      return;
+    }
+
+    _promoApplied = true;
+    _appliedPromoCode = code;
+    _promoDiscount = result.discount;
+    _promoMessage = result.message;
+  });
+}
 
   void _goToOrders() {
     Navigator.pushNamedAndRemoveUntil(

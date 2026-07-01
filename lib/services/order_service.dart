@@ -153,6 +153,9 @@ if (redeemedPoints > 0) {
             orderAmount: orderTotal ?? cart.totalAmount,
           );
           print('🌟 Earned $pointsEarned loyalty points');
+          await Future.delayed(const Duration(milliseconds: 300));
+          // Cart clearing is handled by the checkout flow after a successful payment.
+          print('🛒 Order completed successfully');
         } catch (loyaltyErr) {
           print('⚠️ Loyalty points award failed (order still succeeded): $loyaltyErr');
         }

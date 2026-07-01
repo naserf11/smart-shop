@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 class PromoValidationResult {
   final bool success;
   final String message;
@@ -26,6 +26,7 @@ class PromoCodeService {
     required double subtotal,
   }) async {
     final normalizedCode = code.trim().toUpperCase();
+    debugPrint('Searching promo: $normalizedCode');
     if (normalizedCode.isEmpty) {
       return const PromoValidationResult(
         success: false,
@@ -40,6 +41,7 @@ class PromoCodeService {
           .select()
           .eq('code', normalizedCode)
           .maybeSingle();
+          debugPrint('Promo row: $row');
 
       if (row == null) {
         return const PromoValidationResult(
@@ -49,14 +51,17 @@ class PromoCodeService {
         );
       }
 
-      final minimumOrder = (row['minimum_order'] ?? 0).toDouble();
+      
       final discountType = row['discount_type'] as String?;
       final discountValue = (row['discount_value'] ?? 0).toDouble();
 
-      final isActive = row['is_active'] ?? true;
-      final expiryDate = row['expiry_date'];
-      final usageLimit = row['usage_limit'];
-      final usedCount = row['used_count'] ?? 0;
+      final minimumOrder =
+    (row['minimum_order_amount'] ?? 0).toDouble();
+
+final isActive = row['is_active'] ?? true;
+
+final startDate = row['start_date'];
+final endDate = row['end_date'];
 
       if (isActive == false) {
         return const PromoValidationResult(
@@ -66,24 +71,29 @@ class PromoCodeService {
         );
       }
 
-      if (expiryDate != null) {
-        final expiry = DateTime.parse(expiryDate.toString());
-        if (DateTime.now().isAfter(expiry)) {
-          return const PromoValidationResult(
-            success: false,
-            message: 'This promotion has expired.',
-            discount: 0,
-          );
-        }
-      }
+      if (startDate != null) {
+  final start = DateTime.parse(startDate.toString());
 
-      if (usageLimit != null && usedCount >= usageLimit) {
-        return const PromoValidationResult(
-          success: false,
-          message: 'Promotion usage limit reached.',
-          discount: 0,
-        );
-      }
+  if (DateTime.now().isBefore(start)) {
+    return const PromoValidationResult(
+      success: false,
+      message: 'This promotion is not active yet.',
+      discount: 0,
+    );
+  }
+}
+
+if (endDate != null) {
+  final end = DateTime.parse(endDate.toString());
+
+  if (DateTime.now().isAfter(end)) {
+    return const PromoValidationResult(
+      success: false,
+      message: 'This promotion has expired.',
+      discount: 0,
+    );
+  }
+}
 
       if (subtotal < minimumOrder) {
         return PromoValidationResult(
@@ -111,33 +121,18 @@ class PromoCodeService {
         discountValue: discountValue,
         promoData: Map<String, dynamic>.from(row),
       );
-    } catch (_) {
-      return const PromoValidationResult(
-        success: false,
-        message: 'Unable to validate promotion code.',
-        discount: 0,
-      );
-    }
+    } catch (e) {
+  debugPrint('Promo validation error: $e');
+
+  return const PromoValidationResult(
+    success: false,
+    message: 'Unable to validate promotion code.',
+    discount: 0,
+  );
+}
   }
 
   Future<void> incrementUsage(String promoCode) async {
-    final normalizedCode = promoCode.trim().toUpperCase();
-    try {
-      final row = await _supabase
-          .from('promo_codes')
-          .select()
-          .eq('code', normalizedCode)
-          .maybeSingle();
-
-      if (row != null) {
-        final usedCount = (row['used_count'] ?? 0) as int;
-        await _supabase
-            .from('promo_codes')
-            .update({'used_count': usedCount + 1})
-            .eq('code', normalizedCode);
-      }
-    } catch (_) {
-      // silently ignore errors
-    }
-  }
+  // TODO: implement promo usage tracking later.
+}
 }

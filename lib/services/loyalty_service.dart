@@ -191,6 +191,7 @@ class LoyaltyService {
     required double orderAmount,
   }) async {
     final customerId = await _getCustomerId();
+    print('👤 Loyalty customer: $customerId');
     if (customerId == null) return 0;
 
     final pointsEarned = (orderAmount * pointsPerRm).floor();
@@ -199,6 +200,7 @@ class LoyaltyService {
     try {
       // 1. Get current record (or create)
       final record = await getOrCreateLoyaltyRecord();
+      print('📦 Existing loyalty record: $record');
       if (record == null) return 0;
 
       final oldCurrent = record['current_points'] as int? ?? 0;
@@ -218,6 +220,14 @@ class LoyaltyService {
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('customer_id', customerId);
+
+      final updatedRecord = await _supabase
+          .from('loyalty_points')
+          .select()
+          .eq('customer_id', customerId)
+          .single();
+
+      print('✅ Updated loyalty record: $updatedRecord');
 
       // 3. Insert transaction
       await _supabase.from('loyalty_transactions').insert({
