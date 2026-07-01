@@ -19,23 +19,26 @@ class CategoryCard extends StatelessWidget {
       return const Icon(Icons.image_not_supported);
     }
 
-    if (image.startsWith('http')) {
-      return Image.network(
-        image,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Image.asset(
-          'assets/images/basket.png',
-          fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) =>
-              const Icon(Icons.image_not_supported),
-        ),
-      );
-    }
+    final imageWidget = image.startsWith('http')
+        ? Image.network(
+            image,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Image.asset(
+              'assets/images/basket.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.image_not_supported),
+            ),
+          )
+        : Image.asset(
+            image,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+          );
 
-    return Image.asset(
-      image,
-      fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(height: 100, width: double.infinity, child: imageWidget),
     );
   }
 
@@ -48,22 +51,20 @@ class CategoryCard extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius:
-              BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade200,
-              blurRadius: 5,
-            )
-          ],
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 5)],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(child: _buildImage()),
-            const SizedBox(height: 8),
+            _buildImage(),
+            const SizedBox(height: 10),
             Text(
               title,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14),
             ),
           ],
         ),
