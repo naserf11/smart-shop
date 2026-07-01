@@ -33,8 +33,8 @@ class _CartScreenState extends State<CartScreen> {
         AppRoutes.navigateWithoutAnimation(context, AppRoutes.notifications);
         break;
       case 4:
-    AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
-    break;
+        AppRoutes.navigateWithoutAnimation(context, AppRoutes.profile);
+        break;
     }
   }
 
@@ -152,12 +152,35 @@ class _CartScreenState extends State<CartScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.asset(
-                                  item.product.image,
-                                  width: 78,
-                                  height: 78,
-                                  fit: BoxFit.cover,
-                                ),
+                                child:
+                                    item.product.image.isNotEmpty &&
+                                        item.product.image.startsWith('http')
+                                    ? Image.network(
+                                        item.product.image,
+                                        width: 78,
+                                        height: 78,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Container(
+                                                width: 78,
+                                                height: 78,
+                                                color: Colors.grey.shade200,
+                                                alignment: Alignment.center,
+                                                child: const Icon(
+                                                  Icons.broken_image,
+                                                  color: Colors.grey,
+                                                  size: 28,
+                                                ),
+                                              );
+                                            },
+                                      )
+                                    : Image.asset(
+                                        item.product.image,
+                                        width: 78,
+                                        height: 78,
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
