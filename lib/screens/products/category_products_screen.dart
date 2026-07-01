@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'product_details_screen.dart';
 import '../../models/product.dart';
 import '../../services/cart_service.dart';
 import '../../services/product_service.dart';
@@ -71,7 +71,41 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              size: 48, color: Colors.redAccent),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Could not load products',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${snapshot.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _productsFuture = _productService
+                                    .getProductsByCategory(widget.categoryId);
+                              });
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 }
 
                 final products = snapshot.data ?? [];
@@ -81,7 +115,35 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                 }).toList();
 
                 if (filtered.isEmpty) {
-                  return const Center(child: Text('No products found'));
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.inventory_2_outlined,
+                              size: 48, color: Colors.grey),
+                          const SizedBox(height: 12),
+                          Text(
+                            _searchText.isEmpty
+                                ? 'No products in "${widget.categoryName}" yet'
+                                : 'No products match your search',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
+                          if (_searchText.isEmpty) ...[
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Make sure products are assigned to this category and marked active.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Color.fromARGB(255, 161, 158, 160)),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
                 }
 
                 return ListView.builder(
@@ -91,7 +153,40 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
 
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      child: ListTile(
+                                                                  child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProductDetailsScreen(product: product),
+                            ),
+                          );
+                        },
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox(
+                            width: 56,
+                            height: 56,
+                            child: product.image.startsWith('http')
+                                ? Image.network(
+                                    product.image,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Image.asset(
+                                      'assets/images/basket.png',
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.image_not_supported),
+                                    ),
+                                  )
+                                : Image.asset(
+                                    product.image,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.image_not_supported),
+                                  ),
+                          ),
+                        ),
                         title: Text(product.name),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,12 +209,26 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                             ),
                           ],
                         ),
-                        trailing: ElevatedButton(
+                                                trailing: ElevatedButton(
+                          // Override the global theme's infinite minimumSize,
+                          // otherwise this button tries to fill the whole tile
+                          // width and ListTile throws a layout assertion.
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(64, 40),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                          ),
                           onPressed: () {
-                            CartService().addToCart(product);
+                                                        CartService().addToCart(product);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('${product.name} added to cart'),
+                                backgroundColor: Colors.green.shade600,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                duration: const Duration(seconds: 2),
                               ),
                             );
                           },

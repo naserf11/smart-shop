@@ -12,6 +12,33 @@ class CategoryCard extends StatelessWidget {
     required this.onTap,
   });
 
+  // Renders network URLs via Image.network and bundled paths via Image.asset,
+  // falling back to a default asset (then an icon) if the source fails to load.
+  Widget _buildImage() {
+    if (image.isEmpty) {
+      return const Icon(Icons.image_not_supported);
+    }
+
+    if (image.startsWith('http')) {
+      return Image.network(
+        image,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => Image.asset(
+          'assets/images/basket.png',
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.image_not_supported),
+        ),
+      );
+    }
+
+    return Image.asset(
+      image,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -32,16 +59,7 @@ class CategoryCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Expanded(
-  child: image.isNotEmpty
-      ? Image.asset(
-          image,
-          fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) =>
-              const Icon(Icons.image_not_supported),
-        )
-      : const Icon(Icons.image_not_supported),
-),
+            Expanded(child: _buildImage()),
             const SizedBox(height: 8),
             Text(
               title,

@@ -4,6 +4,7 @@ import '../../widgets/category_card.dart';
 import '../../services/category_service.dart';
 import '../../models/category.dart';
 import '../../core/app_routes.dart';
+import '../products/category_products_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -75,7 +76,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               return CategoryCard(
                 image: category.image,
                 title: category.name,
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CategoryProductsScreen(
+                        categoryId: category.id,
+                        categoryName: category.name,
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );

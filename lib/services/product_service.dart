@@ -105,7 +105,7 @@ class ProductService {
     }
   }
 
-  Future<List<Product>> getProductsByCategory(String categoryId) async {
+   Future<List<Product>> getProductsByCategory(String categoryId) async {
     try {
       final response = await supabase
           .from('products')
@@ -114,13 +114,18 @@ class ProductService {
           .eq('is_active', true)
           .order('created_at', ascending: false);
 
-      return (response as List<dynamic>)
+      final products = (response as List<dynamic>)
           .map(
             (json) => Product.fromJson(
               _processProductJson(json as Map<String, dynamic>),
             ),
           )
           .toList();
+
+      print(
+        '📦 getProductsByCategory("$categoryId") -> ${products.length} active product(s)',
+      );
+      return products;
     } catch (e, st) {
       print('❌ Error fetching products by category: $e');
       print('Stack: $st');
@@ -132,7 +137,7 @@ class ProductService {
     try {
       final response = await supabase
           .from('products')
-          .select('*, categories(category_name), product_images(image_url)')
+                              .select('*, product_images(image_url)')
           .eq('is_active', true)
           .ilike('product_name', '%$keyword%')
           .order('created_at', ascending: false);
